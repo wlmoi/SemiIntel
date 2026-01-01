@@ -248,7 +248,7 @@ class SyntheticDataGenerator:
                 "Performance regression in v2.0",
             ], n_samples),
             "severity": np.random.choice(severities, n_samples, p=[0.15, 0.25, 0.35, 0.25]),
-            "labels": ["bug", "enhancement", "documentation", "question"],
+            "labels": np.random.choice(["bug", "enhancement", "documentation", "question"], n_samples),
             "created_at": pd.date_range('2020-01-01', periods=n_samples, freq='D'),
             "votes": np.random.poisson(5, n_samples),
             "repository": np.random.choice([

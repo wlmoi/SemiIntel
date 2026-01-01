@@ -17,69 +17,62 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Professional CSS with Times New Roman
+# Professional CSS with Times New Roman and hero styles
 st.markdown("""
 <style>
     * {
         font-family: 'Times New Roman', Times, serif;
     }
-    
     html, body, [class*="css"] {
         font-family: 'Times New Roman', Times, serif;
     }
-    
     .main-header {
         font-size: 2.8rem;
-        font-weight: 600;
-        color: #1a3a52;
+        font-weight: 700;
+        color: #0f3b57;
         text-align: center;
-        margin-bottom: 1.5rem;
-        letter-spacing: 0.5px;
-        border-bottom: 3px solid #1f77b4;
-        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        letter-spacing: 0.6px;
+        padding-bottom: 0.8rem;
     }
-    
-    .sub-header {
-        font-size: 1.4rem;
-        color: #2c5aa0;
-        margin-top: 1.5rem;
-        margin-bottom: 0.8rem;
-        font-weight: 600;
-        border-left: 4px solid #1f77b4;
-        padding-left: 1rem;
-    }
-    
-    .metric-card {
-        background: linear-gradient(135deg, #f0f2f6 0%, #e8eef7 100%);
-        padding: 1.5rem;
-        border-radius: 8px;
-        border-left: 5px solid #1f77b4;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .success-box {
-        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    .hero {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
         padding: 1.2rem;
-        border-radius: 8px;
-        border-left: 5px solid #28a745;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        background: linear-gradient(90deg, rgba(31,119,180,0.06), rgba(44,90,160,0.03));
+        border-radius: 10px;
+        border: 1px solid rgba(31,119,180,0.08);
+        margin-bottom: 1rem;
     }
-    
-    .info-box {
-        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
-        padding: 1.2rem;
+    .profile-pic {
+        width: 140px;
+        height: 140px;
         border-radius: 8px;
-        border-left: 5px solid #17a2b8;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        object-fit: cover;
+        border: 4px solid #1f77b4;
+        box-shadow: 0 6px 18px rgba(31,119,180,0.12);
     }
-    
-    .warning-box {
-        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-        padding: 1.2rem;
-        border-radius: 8px;
-        border-left: 5px solid #ffc107;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    .bio { margin-left: 0.6rem; }
+    .bio h2 { margin: 0; color: #12384e; font-size: 1.6rem; }
+    .bio p { margin: 0.25rem 0; color: #334e5b; }
+    .skill-badge {
+        display: inline-block;
+        background: #e8f2fb;
+        color: #0f3b57;
+        padding: 6px 10px;
+        border-radius: 16px;
+        margin: 4px 6px 4px 0;
+        font-size: 0.9rem;
+        border: 1px solid rgba(31,119,180,0.12);
     }
+    .timeline { margin-top: 0.8rem; }
+    .timeline-item { margin-bottom: 0.6rem; }
+    .credit-box { padding: 0.8rem; border-radius: 8px; background: linear-gradient(135deg,#f8fbff,#eef6fb); border:1px solid rgba(31,119,180,0.06);} 
+    .metric-card { background: linear-gradient(135deg, #f0f2f6 0%, #e8eef7 100%); padding: 1.5rem; border-radius: 8px; border-left: 5px solid #1f77b4; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .success-box { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); padding: 1.2rem; border-radius: 8px; border-left: 5px solid #28a745; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .info-box { background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%); padding: 1.2rem; border-radius: 8px; border-left: 5px solid #17a2b8; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .warning-box { background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); padding: 1.2rem; border-radius: 8px; border-left: 5px solid #ffc107; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -243,6 +236,50 @@ if page == "🏠 Home":
     # Getting Started
     st.markdown("### 🚀 Getting Started")
     st.info("👈 Use the sidebar to navigate through different features of SEMIINTEL")
+
+    # Hero / About the Author (Get to know me)
+    st.markdown("---")
+    # Use a two-column layout: main hero and quick stats
+    left, right = st.columns([3, 1])
+    with left:
+        st.markdown(
+            f"""
+            <div class="hero">
+                <img class="profile-pic" src="https://ui-avatars.com/api/?name=William+Anthony&background=1f77b4&color=ffffff&size=256" alt="William Anthony" />
+                <div class="bio">
+                    <h2>William Anthony</h2>
+                    <p><strong>Creator of SEMIINTEL</strong> — Digital Systems & FPGA · Research & Teaching Assistant</p>
+                    <p>Lifetime Learner · Ganesha Awardee 2024 &amp; 2025</p>
+                    <p><a href="https://www.linkedin.com/in/wlmoi/">LinkedIn</a> • <a href="https://github.com/wlmoi">GitHub</a> • Batam, Indonesia</p>
+                    <div style="margin-top:8px">
+                        <span class="skill-badge">VHDL</span>
+                        <span class="skill-badge">Verilog</span>
+                        <span class="skill-badge">ModelSim</span>
+                        <span class="skill-badge">Intel Quartus</span>
+                        <span class="skill-badge">MATLAB</span>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("<div class='credit-box'>📌 Contributions: Project design, OSINT query engine, ML pipeline, NLP analysis, UI and deployment automation.</div>", unsafe_allow_html=True)
+        st.markdown("### Experience & Projects")
+        st.markdown("""
+        <div class="timeline">
+          <div class="timeline-item"><strong>Research Assistant</strong> — Institut Teknologi Bandung (Feb 2025 – Present). Partial Discharge FPGA research; MATLAB modelling and Verilog implementation.</div>
+          <div class="timeline-item"><strong>Digital Systems Assistant Lecturer</strong> — Institut Teknologi Bandung (Sep 2025 – Present). Lab exercises, VHDL/FPGA instruction.</div>
+          <div class="timeline-item"><strong>Chipathon 2025</strong> — Tapeout Participant (Jul 2025 – Dec 2025). RTL generation and PDK flow (OpenLane).</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with right:
+        st.markdown("### Quick Stats")
+        st.markdown("- Projects: 6+")
+        st.markdown("- Certifications: Chipathon 2025")
+        st.markdown("- Open-source: GitHub contributions")
+        st.markdown("\n[View CV / Certificate](./William Anthony Chipathon Certificate.pdf)")
 
 # ============================================================================
 # ML PIPELINE PAGE
@@ -1084,14 +1121,28 @@ elif page == "🔍 OSINT Tools":
                 st.markdown("---")
                 st.markdown("**Generated Search Queries**")
                 
-                for doc_type in doc_types:
+                # Mapping from UI labels to DorkingEngine keys
+                doc_type_map = {
+                    "Datasheet": "datasheet",
+                    "Reference Manual": "reference_manual",
+                    "Application Note": "application_note",
+                    "Errata Sheet": "errata",
+                    "User Manual": "programming_manual"
+                }
+
+                for ui_doc_type in doc_types:
+                    engine_key = doc_type_map.get(ui_doc_type)
+                    if not engine_key:
+                        st.warning(f"Skipping unknown document type: {ui_doc_type}")
+                        continue
+
                     queries = []
                     # Generate one query per site for this document type
                     for site in engine.DEFAULT_SITES:
-                        query = engine.generate_dork_query(part_number, doc_type, site)
+                        query = engine.generate_dork_query(part_number, engine_key, site)
                         queries.append(query)
-                    
-                    with st.expander(f"{doc_type.replace('_', ' ').title()}"):
+
+                    with st.expander(f"{ui_doc_type}"):
                         for i, query in enumerate(queries, 1):
                             st.code(query, language="text")
                             st.markdown(f"[Search Google](https://www.google.com/search?q={query.replace(' ', '+')})")
