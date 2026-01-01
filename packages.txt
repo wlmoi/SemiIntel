@@ -1,5 +1,2 @@
-# System-level dependencies for Streamlit Cloud deployment
-# These OS packages will be installed via apt-get
 
-# Required for some scientific computing libraries and parallel processing
 libgomp1
