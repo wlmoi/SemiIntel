@@ -79,7 +79,7 @@ st.sidebar.markdown("---")
 
 page = st.sidebar.radio(
     "Navigate to:",
-    ["🏠 Home", "🤖 ML Pipeline", "🧠 NLP Analysis", "📊 Datasets", "🔍 OSINT Tools", "📈 Analytics Dashboard"]
+    ["🏠 Home", "🤖 ML Pipeline", "🧠 NLP Analysis", "📊 Datasets", "🔍 OSINT Tools", "📈 Analytics Dashboard", "🚀 Deployment"]
 )
 
 st.sidebar.markdown("---")
@@ -1332,6 +1332,868 @@ elif page == "📈 Analytics Dashboard":
             st.markdown(f"**{activity['time']}**")
             st.markdown(activity['activity'])
         st.markdown("---")
+
+# ============================================================================
+# DEPLOYMENT PAGE
+# ============================================================================
+if page == "🚀 Deployment":
+    st.markdown('<div class="main-header">🚀 GitHub & Streamlit Cloud Deployment</div>', unsafe_allow_html=True)
+    st.markdown("### Interactive Deployment Workflow")
+    st.markdown("Deploy your SEMIINTEL app to the web in minutes!")
+    st.markdown("---")
+    
+    # Deployment Readiness Check
+    st.markdown("## 📋 Deployment Readiness Check")
+    
+    import os
+    import subprocess
+    
+    # Check files
+    required_files = {
+        "app.py": "Main Streamlit application",
+        "requirements.txt": "Python dependencies",
+        ".streamlit/config.toml": "Streamlit configuration",
+        "packages.txt": "System dependencies",
+        "docs/DEPLOYMENT.md": "Deployment guide",
+        "LICENSE": "License file",
+        "docs/README.md": "Project documentation"
+    }
+    
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        st.markdown("### File Checks")
+        all_files_present = True
+        for file_path, description in required_files.items():
+            if os.path.exists(file_path):
+                st.success(f"✅ {file_path}")
+            else:
+                st.error(f"❌ {file_path}")
+                all_files_present = False
+    
+    with col2:
+        st.markdown("### Git Status")
+        try:
+            # Check if git is initialized
+            git_init = subprocess.run(["git", "status"], capture_output=True, text=True, timeout=5)
+            if git_init.returncode == 0:
+                st.success("✅ Git repository initialized")
+                
+                # Check for remote
+                git_remote = subprocess.run(["git", "remote", "-v"], capture_output=True, text=True, timeout=5)
+                if git_remote.stdout.strip():
+                    st.success("✅ Remote repository configured")
+                    with st.expander("View remote URLs"):
+                        st.code(git_remote.stdout)
+                else:
+                    st.warning("⚠️ No remote repository configured")
+                
+                # Check for uncommitted changes
+                git_status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, timeout=5)
+                if git_status.stdout.strip():
+                    st.info(f"ℹ️ {len(git_status.stdout.strip().splitlines())} uncommitted changes")
+                else:
+                    st.success("✅ No uncommitted changes")
+            else:
+                st.warning("⚠️ Git not initialized")
+        except Exception as e:
+            st.error(f"❌ Git check failed: {e}")
+    
+    st.markdown("---")
+    
+    # Deployment Platform Selection
+    st.markdown("## 🎯 Choose Your Deployment Platform")
+    
+    platform = st.radio(
+        "Select deployment target:",
+        ["☁️ Streamlit Cloud (Recommended)", "🌐 Azure Web App", "📋 Manual Setup Guide"],
+        horizontal=True
+    )
+    
+    st.markdown("---")
+    
+    # Deployment Steps
+    if platform == "☁️ Streamlit Cloud (Recommended)":
+        st.markdown("## 📝 Streamlit Cloud Deployment")
+        
+        tab1, tab2, tab3, tab4 = st.tabs(["1️⃣ Setup Git", "2️⃣ Push to GitHub", "3️⃣ Deploy to Streamlit", "4️⃣ Verify & Monitor"])
+    
+    with tab1:
+        st.markdown("### Step 1: Git Setup")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Check Git Installation")
+            if st.button("🔍 Check Git", key="check_git"):
+                try:
+                    result = subprocess.run(["git", "--version"], capture_output=True, text=True, timeout=5)
+                    if result.returncode == 0:
+                        st.success(f"Git is installed: {result.stdout.strip()}")
+                    else:
+                        st.error("Git is not installed")
+                        st.markdown("[Download Git](https://git-scm.com/download/win)")
+                except:
+                    st.error("Git is not installed or not in PATH")
+                    st.markdown("[Download Git](https://git-scm.com/download/win)")
+        
+        with col2:
+            st.markdown("#### Configure Git")
+            with st.form("git_config"):
+                git_name = st.text_input("Your Name", placeholder="John Doe")
+                git_email = st.text_input("Your Email", placeholder="john@example.com")
+                
+                if st.form_submit_button("⚙️ Configure Git"):
+                    if git_name and git_email:
+                        try:
+                            subprocess.run(["git", "config", "user.name", git_name], check=True)
+                            subprocess.run(["git", "config", "user.email", git_email], check=True)
+                            st.success(f"✅ Git configured for {git_name}")
+                        except:
+                            st.error("Failed to configure Git")
+                    else:
+                        st.warning("Please fill in both fields")
+        
+        st.markdown("---")
+        st.markdown("#### Initialize Repository")
+        
+        if st.button("🎬 Initialize Git Repository", key="init_git"):
+            try:
+                result = subprocess.run(["git", "init"], capture_output=True, text=True)
+                if result.returncode == 0:
+                    st.success("✅ Git repository initialized")
+                else:
+                    st.info("Repository already initialized")
+            except Exception as e:
+                st.error(f"Error: {e}")
+        
+        st.markdown("---")
+        st.markdown("#### Commands Reference")
+        st.code("""
+# Initialize git repository
+git init
+
+# Configure user
+git config user.name "Your Name"
+git config user.email "your.email@example.com"
+
+# Check status
+git status
+        """, language="bash")
+    
+    with tab2:
+        st.markdown("### Step 2: Push to GitHub")
+        
+        st.markdown("#### Create GitHub Repository")
+        st.info("📝 Go to [github.com/new](https://github.com/new) and create a repository named **SemiIntel**")
+        st.warning("⚠️ Make it **Public** (required for free Streamlit Cloud deployment)")
+        
+        st.markdown("---")
+        st.markdown("#### Add Remote Repository")
+        
+        with st.form("add_remote"):
+            repo_url = st.text_input(
+                "GitHub Repository URL",
+                placeholder="https://github.com/username/SemiIntel.git",
+                help="Copy this from your GitHub repository"
+            )
+            
+            if st.form_submit_button("🔗 Add Remote"):
+                if repo_url:
+                    try:
+                        # Check if remote exists
+                        check_remote = subprocess.run(["git", "remote", "get-url", "origin"], 
+                                                     capture_output=True, text=True)
+                        
+                        if check_remote.returncode == 0:
+                            # Update existing remote
+                            subprocess.run(["git", "remote", "set-url", "origin", repo_url], check=True)
+                            st.success(f"✅ Remote updated: {repo_url}")
+                        else:
+                            # Add new remote
+                            subprocess.run(["git", "remote", "add", "origin", repo_url], check=True)
+                            st.success(f"✅ Remote added: {repo_url}")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+                else:
+                    st.warning("Please enter a repository URL")
+        
+        st.markdown("---")
+        st.markdown("#### Commit and Push")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            commit_message = st.text_input(
+                "Commit Message",
+                value="Initial commit: SEMIINTEL web application"
+            )
+            
+            if st.button("📦 Stage All Files", key="stage_files"):
+                try:
+                    subprocess.run(["git", "add", "."], check=True)
+                    st.success("✅ Files staged")
+                except Exception as e:
+                    st.error(f"Error: {e}")
+            
+            if st.button("💾 Commit Changes", key="commit_changes"):
+                try:
+                    subprocess.run(["git", "commit", "-m", commit_message], check=True)
+                    st.success("✅ Changes committed")
+                except Exception as e:
+                    st.error(f"Error: {e}")
+        
+        with col2:
+            branch_name = st.selectbox("Branch", ["main", "master"])
+            
+            if st.button("🚀 Push to GitHub", type="primary", key="push_github"):
+                with st.spinner("Pushing to GitHub..."):
+                    try:
+                        # Try to push
+                        result = subprocess.run(
+                            ["git", "push", "-u", "origin", branch_name],
+                            capture_output=True,
+                            text=True,
+                            timeout=30
+                        )
+                        
+                        if result.returncode == 0:
+                            st.success("🎉 Successfully pushed to GitHub!")
+                            st.balloons()
+                        else:
+                            # Try renaming branch if it fails
+                            subprocess.run(["git", "branch", "-M", branch_name], check=True)
+                            result2 = subprocess.run(
+                                ["git", "push", "-u", "origin", branch_name],
+                                capture_output=True,
+                                text=True,
+                                timeout=30
+                            )
+                            if result2.returncode == 0:
+                                st.success("🎉 Successfully pushed to GitHub!")
+                                st.balloons()
+                            else:
+                                st.error(f"Push failed: {result2.stderr}")
+                                st.info("You may need to authenticate with GitHub")
+                    except subprocess.TimeoutExpired:
+                        st.warning("Push is taking longer than expected. Check your terminal.")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+        
+        st.markdown("---")
+        st.markdown("#### Manual Commands")
+        st.code(f"""
+# Stage all files
+git add .
+
+# Commit changes
+git commit -m "{commit_message}"
+
+# Add remote (if not added)
+git remote add origin YOUR_GITHUB_URL
+
+# Push to GitHub
+git push -u origin {branch_name}
+        """, language="bash")
+    
+    with tab3:
+        st.markdown("### Step 3: Deploy to Streamlit Cloud")
+        
+        st.markdown("#### Streamlit Cloud Setup")
+        
+        st.info("""ℹ️ **Streamlit Cloud** provides free hosting for Streamlit apps directly from GitHub.
+        
+**Requirements:**
+- GitHub account with your code pushed
+- Public repository (or Streamlit Cloud Pro for private repos)
+        """)
+        
+        st.markdown("---")
+        st.markdown("#### Deployment Steps")
+        
+        steps = [
+            {
+                "num": "1",
+                "title": "Go to Streamlit Cloud",
+                "desc": "Visit [share.streamlit.io](https://share.streamlit.io)",
+                "action": "Open Link",
+                "url": "https://share.streamlit.io"
+            },
+            {
+                "num": "2",
+                "title": "Sign In",
+                "desc": "Sign in with your GitHub account",
+                "action": None,
+                "url": None
+            },
+            {
+                "num": "3",
+                "title": "Create New App",
+                "desc": "Click the **'New app'** button",
+                "action": None,
+                "url": None
+            },
+            {
+                "num": "4",
+                "title": "Configure Deployment",
+                "desc": "Select your repository and configure:",
+                "config": {
+                    "Repository": "YOUR_USERNAME/SemiIntel",
+                    "Branch": "main",
+                    "Main file path": "app.py"
+                },
+                "action": None,
+                "url": None
+            },
+            {
+                "num": "5",
+                "title": "Deploy!",
+                "desc": "Click **'Deploy!'** and wait 2-5 minutes",
+                "action": None,
+                "url": None
+            }
+        ]
+        
+        for step in steps:
+            with st.container():
+                col1, col2 = st.columns([1, 5])
+                with col1:
+                    st.markdown(f"### {step['num']}")
+                with col2:
+                    st.markdown(f"**{step['title']}**")
+                    st.markdown(step['desc'])
+                    
+                    if 'config' in step:
+                        for key, value in step['config'].items():
+                            st.code(f"{key}: {value}")
+                    
+                    if step['action'] and step['url']:
+                        st.link_button(step['action'], step['url'])
+                
+                st.markdown("---")
+        
+        st.markdown("#### What Happens During Deployment?")
+        
+        timeline = [
+            {"step": "Building container", "time": "~30 seconds", "icon": "🏗️"},
+            {"step": "Installing Python packages", "time": "~1-2 minutes", "icon": "📦"},
+            {"step": "Installing system packages", "time": "~30 seconds", "icon": "⚙️"},
+            {"step": "Starting application", "time": "~10 seconds", "icon": "🚀"},
+            {"step": "App is live!", "time": "Total: 2-5 minutes", "icon": "✅"}
+        ]
+        
+        for item in timeline:
+            col1, col2, col3 = st.columns([1, 4, 2])
+            with col1:
+                st.markdown(f"## {item['icon']}")
+            with col2:
+                st.markdown(f"**{item['step']}**")
+            with col3:
+                st.markdown(f"*{item['time']}*")
+        
+        st.markdown("---")
+        st.success("""✅ **Your app will be accessible at:**
+        
+`https://YOUR_USERNAME-semiintel-app-xxxxx.streamlit.app`
+        
+📋 Copy this URL and add it to your README.md!""")
+    
+    with tab4:
+        st.markdown("### Step 4: Verify & Monitor")
+        
+        st.markdown("#### Post-Deployment Checklist")
+        
+        checklist = [
+            "App loads without errors",
+            "All pages are accessible",
+            "ML models load correctly",
+            "NLP tools work as expected",
+            "Dataset explorer functions",
+            "OSINT tools are operational",
+            "Analytics dashboard displays data",
+            "No broken links or images"
+        ]
+        
+        col1, col2 = st.columns(2)
+        
+        for i, item in enumerate(checklist):
+            with col1 if i < len(checklist)//2 else col2:
+                st.checkbox(item, key=f"check_{i}")
+        
+        st.markdown("---")
+        st.markdown("#### Update README with Live URL")
+        
+        app_url = st.text_input(
+            "Your Streamlit Cloud App URL",
+            placeholder="https://username-semiintel-app-xxxxx.streamlit.app"
+        )
+        
+        if app_url:
+            readme_update = f"""
+## 🌐 Live Demo
+
+**Try the interactive web app:** [{app_url}]({app_url})
+
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)]({app_url})
+            """
+            
+            st.markdown("**Add this to your README.md:**")
+            st.code(readme_update, language="markdown")
+            
+            if st.button("📋 Copy to Clipboard"):
+                st.success("✅ Copied! (Note: Manual copy from code block above)")
+        
+        st.markdown("---")
+        st.markdown("#### Monitoring & Analytics")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("##### Streamlit Cloud Dashboard")
+            st.markdown("""
+- View app logs in real-time
+- Monitor resource usage
+- Track visitor analytics
+- Manage deployments
+- Configure secrets
+            """)
+            st.link_button("📊 Open Dashboard", "https://share.streamlit.io")
+        
+        with col2:
+            st.markdown("##### Continuous Deployment")
+            st.markdown("""
+- Push changes to GitHub
+- App auto-redeploys (1-2 min)
+- No manual intervention needed
+- View build logs for errors
+- Rollback if needed
+            """)
+        
+        st.markdown("---")
+        st.markdown("#### Common Issues & Solutions")
+        
+        issues = [
+            {
+                "problem": "Module import errors",
+                "solution": "Check all modules are in repository and requirements.txt is complete"
+            },
+            {
+                "problem": "App crashes on startup",
+                "solution": "View logs in Streamlit Cloud dashboard for specific error messages"
+            },
+            {
+                "problem": "Slow performance",
+                "solution": "Add @st.cache_data and @st.cache_resource decorators to expensive operations"
+            },
+            {
+                "problem": "Build timeout",
+                "solution": "Reduce dependencies or use lighter alternatives in requirements.txt"
+            }
+        ]
+        
+        for issue in issues:
+            with st.expander(f"❓ {issue['problem']}"):
+                st.markdown(f"**Solution:** {issue['solution']}")
+    
+    elif platform == "🌐 Azure Web App":
+        st.markdown("## 🌐 Azure Web App Deployment (GitHub Actions)")
+        
+        st.info("""
+✨ **Good news!** Your repository already includes Azure deployment workflow!
+        
+File: `.github/workflows/azure-webapps-python.yml`
+        
+This enables automatic deployment to Azure Web Apps when you push to GitHub.
+        """)
+        
+        st.markdown("---")
+        st.markdown("### 📋 Prerequisites")
+        
+        prerequisites = [
+            "✅ Azure account (free tier available)",
+            "✅ GitHub repository (already set up)",
+            "✅ Azure Web App created",
+            "✅ Publish profile from Azure"
+        ]
+        
+        for prereq in prerequisites:
+            st.markdown(prereq)
+        
+        st.markdown("---")
+        st.markdown("### 🔧 Setup Steps")
+        
+        azure_tab1, azure_tab2, azure_tab3 = st.tabs(["1️⃣ Create Azure Web App", "2️⃣ Configure GitHub", "3️⃣ Deploy"])
+        
+        with azure_tab1:
+            st.markdown("#### Create Azure Web App")
+            
+            st.markdown("**Step 1: Sign in to Azure Portal**")
+            st.link_button("🌐 Open Azure Portal", "https://portal.azure.com")
+            
+            st.markdown("**Step 2: Create Web App**")
+            st.code("""
+1. Click "Create a resource"
+2. Search for "Web App"
+3. Click "Create"
+4. Fill in details:
+   - Subscription: Your subscription
+   - Resource Group: Create new (e.g., "semiintel-rg")
+   - Name: Your app name (e.g., "semiintel-app")
+   - Runtime: Python 3.10
+   - Region: Choose closest to you
+   - Pricing: Free F1 (for testing)
+5. Click "Review + Create"
+6. Click "Create"
+            """)
+            
+            st.markdown("**Step 3: Configure for Streamlit**")
+            st.code("""
+After creation:
+1. Go to your Web App
+2. Settings → Configuration
+3. Add Application Setting:
+   - Name: WEBSITES_PORT
+   - Value: 8501
+4. Save changes
+            """)
+        
+        with azure_tab2:
+            st.markdown("#### Configure GitHub Secrets")
+            
+            st.markdown("**Step 1: Download Publish Profile**")
+            st.code("""
+In Azure Portal:
+1. Go to your Web App
+2. Click "Get publish profile" (top menu)
+3. Save the downloaded .PublishSettings file
+            """)
+            
+            st.markdown("**Step 2: Add Secret to GitHub**")
+            st.code("""
+In GitHub:
+1. Go to your repository
+2. Settings → Secrets and variables → Actions
+3. Click "New repository secret"
+4. Name: AZURE_WEBAPP_PUBLISH_PROFILE
+5. Value: Paste entire contents of .PublishSettings file
+6. Click "Add secret"
+            """)
+            
+            st.markdown("**Step 3: Update Workflow File**")
+            
+            workflow_config = st.text_input(
+                "Your Azure Web App Name",
+                placeholder="semiintel-app",
+                help="This is the name you chose when creating the Azure Web App"
+            )
+            
+            if workflow_config:
+                st.markdown("Update the workflow file with your app name:")
+                st.code(f"""
+# In .github/workflows/azure-webapps-python.yml
+# Change line 23:
+AZURE_WEBAPP_NAME: {workflow_config}  # your app name here
+                """, language="yaml")
+                
+                if st.button("📝 Update Workflow File"):
+                    try:
+                        with open(".github/workflows/azure-webapps-python.yml", "r") as f:
+                            content = f.read()
+                        
+                        updated_content = content.replace(
+                            "AZURE_WEBAPP_NAME: your-app-name",
+                            f"AZURE_WEBAPP_NAME: {workflow_config}"
+                        )
+                        
+                        with open(".github/workflows/azure-webapps-python.yml", "w") as f:
+                            f.write(updated_content)
+                        
+                        st.success("✅ Workflow file updated!")
+                        st.info("Don't forget to commit and push this change!")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+        
+        with azure_tab3:
+            st.markdown("#### Deploy to Azure")
+            
+            st.markdown("**Automatic Deployment**")
+            st.info("""
+🔄 **GitHub Actions will automatically deploy your app when you push to the main branch!**
+
+The workflow will:
+1. ✅ Check out your code
+2. ✅ Set up Python environment
+3. ✅ Install dependencies
+4. ✅ Deploy to Azure Web App
+5. ✅ Your app is live!
+            """)
+            
+            st.markdown("**Trigger Deployment**")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("##### Push Changes")
+                st.code("""
+git add .
+git commit -m "Configure Azure deployment"
+git push origin main
+                """, language="bash")
+            
+            with col2:
+                st.markdown("##### Manual Trigger")
+                st.code("""
+1. Go to GitHub repository
+2. Actions tab
+3. Select workflow
+4. Click "Run workflow"
+                """)
+            
+            st.markdown("---")
+            st.markdown("**Monitor Deployment**")
+            
+            st.link_button("📊 View GitHub Actions", "https://github.com/YOUR_USERNAME/SemiIntel/actions")
+            
+            st.markdown("---")
+            st.markdown("**Access Your App**")
+            
+            if workflow_config:
+                azure_url = f"https://{workflow_config}.azurewebsites.net"
+                st.success(f"Your app will be available at: [{azure_url}]({azure_url})")
+            else:
+                st.info("Enter your Azure Web App name above to see your app URL")
+        
+        st.markdown("---")
+        st.markdown("### 💡 Azure vs Streamlit Cloud")
+        
+        comparison = pd.DataFrame({
+            "Feature": ["Free Tier", "Custom Domain", "Always On", "Scaling", "Build Time", "Setup Complexity"],
+            "Streamlit Cloud": ["✅ Yes", "❌ No (paid)", "✅ Yes", "❌ Limited", "⚡ Fast", "🟢 Easy"],
+            "Azure Web App": ["✅ Yes (F1)", "✅ Yes", "❌ No (F1)", "✅ Flexible", "🐌 Slower", "🟡 Moderate"]
+        })
+        
+        st.dataframe(comparison, use_container_width=True, hide_index=True)
+        
+        st.markdown("---")
+        st.markdown("### 🔧 Additional Azure Configuration")
+        
+        with st.expander("⚙️ Startup Command"):
+            st.markdown("If your app doesn't start, add this startup command in Azure:")
+            st.code("python -m streamlit run app.py --server.port=8501 --server.address=0.0.0.0")
+        
+        with st.expander("📝 Create startup.sh"):
+            st.markdown("Create a `startup.sh` file in your repository:")
+            st.code("""#!/bin/bash
+python -m streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+            """, language="bash")
+        
+        with st.expander("🔒 Environment Variables"):
+            st.markdown("Add these in Azure → Configuration → Application Settings:")
+            st.code("""
+WEBSITES_PORT=8501
+SCM_DO_BUILD_DURING_DEPLOYMENT=true
+            """)
+    
+    elif platform == "📋 Manual Setup Guide":
+        st.markdown("## 📋 Manual Deployment Options")
+        
+        st.info("Choose a manual deployment method for more control and customization.")
+        
+        manual_option = st.selectbox(
+            "Select deployment method:",
+            ["Docker", "Heroku", "AWS EC2", "Google Cloud Run", "Railway", "Render"]
+        )
+        
+        st.markdown("---")
+        
+        if manual_option == "Docker":
+            st.markdown("### 🐳 Docker Deployment")
+            
+            st.markdown("**1. Create Dockerfile:**")
+            st.code("""FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8501
+
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
+
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+            """, language="dockerfile")
+            
+            st.markdown("**2. Create .dockerignore:**")
+            st.code("""__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.git
+.gitignore
+*.md
+            """)
+            
+            st.markdown("**3. Build and Run:**")
+            st.code("""
+# Build image
+docker build -t semiintel-app .
+
+# Run container
+docker run -p 8501:8501 semiintel-app
+
+# Access at http://localhost:8501
+            """, language="bash")
+        
+        elif manual_option == "Heroku":
+            st.markdown("### 🟣 Heroku Deployment")
+            
+            st.markdown("**1. Create Procfile:**")
+            st.code("""web: sh setup.sh && streamlit run app.py""")
+            
+            st.markdown("**2. Create setup.sh:**")
+            st.code("""#!/bin/bash
+mkdir -p ~/.streamlit/
+echo "[server]
+headless = true
+port = $PORT
+enableCORS = false
+" > ~/.streamlit/config.toml
+            """, language="bash")
+            
+            st.markdown("**3. Deploy:**")
+            st.code("""
+# Install Heroku CLI
+# Login
+heroku login
+
+# Create app
+heroku create your-app-name
+
+# Deploy
+git push heroku main
+
+# Open app
+heroku open
+            """, language="bash")
+        
+        elif manual_option == "AWS EC2":
+            st.markdown("### ☁️ AWS EC2 Deployment")
+            
+            st.code("""
+# 1. Launch EC2 instance (Ubuntu)
+# 2. SSH into instance
+# 3. Install dependencies
+sudo apt update
+sudo apt install python3-pip
+pip3 install -r requirements.txt
+
+# 4. Run with nohup
+nohup streamlit run app.py &
+
+# 5. Configure security group (port 8501)
+# 6. Access via http://ec2-public-ip:8501
+            """, language="bash")
+        
+        elif manual_option == "Google Cloud Run":
+            st.markdown("### 🌐 Google Cloud Run")
+            
+            st.code("""
+# 1. Create Dockerfile (see Docker tab)
+# 2. Build and push to Container Registry
+gcloud builds submit --tag gcr.io/PROJECT-ID/semiintel
+
+# 3. Deploy to Cloud Run
+gcloud run deploy --image gcr.io/PROJECT-ID/semiintel --platform managed
+            """, language="bash")
+        
+        elif manual_option == "Railway":
+            st.markdown("### 🚂 Railway Deployment")
+            
+            st.info("""
+**Railway** offers easy deployment with GitHub integration:
+
+1. Go to [railway.app](https://railway.app)
+2. Sign in with GitHub
+3. New Project → Deploy from GitHub repo
+4. Select your SemiIntel repository
+5. Railway auto-detects Python and Streamlit
+6. Your app deploys automatically!
+            """)
+        
+        elif manual_option == "Render":
+            st.markdown("### 🎨 Render Deployment")
+            
+            st.info("""
+**Render** provides free web services:
+
+1. Go to [render.com](https://render.com)
+2. New → Web Service
+3. Connect GitHub repository
+4. Configure:
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `streamlit run app.py`
+5. Deploy!
+            """)
+    
+    st.markdown("---")
+    
+    # Quick Reference
+    st.markdown("## 📚 Quick Reference")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("### 📖 Documentation")
+        st.link_button("📄 DEPLOYMENT.md", "https://github.com/wlmoi/SemiIntel/blob/main/docs/DEPLOYMENT.md")
+        st.link_button("📘 Streamlit Docs", "https://docs.streamlit.io")
+        st.link_button("🌐 Azure Docs", "https://docs.microsoft.com/azure/app-service/")
+    
+    with col2:
+        st.markdown("### 🛠️ Tools")
+        st.link_button("🐙 GitHub", "https://github.com")
+        st.link_button("☁️ Streamlit Cloud", "https://share.streamlit.io")
+        st.link_button("🌐 Azure Portal", "https://portal.azure.com")
+    
+    with col3:
+        st.markdown("### 🎯 Resources")
+        st.link_button("💬 Streamlit Forum", "https://discuss.streamlit.io")
+        st.link_button("📖 Git Guide", "https://git-scm.com/doc")
+        st.link_button("📊 GitHub Actions", "https://github.com/wlmoi/SemiIntel/actions")
+    
+    st.markdown("---")
+    
+    # Automated Setup Option
+    st.markdown("## ⚡ Automated Setup (Advanced)")
+    
+    st.info("""💡 **Quick Setup Script:**
+    
+Run the automated setup script in your terminal:
+    
+```powershell
+.\scripts\setup_github.ps1
+```
+    
+This script will:
+- Check Git installation
+- Configure Git user
+- Initialize repository
+- Guide you through GitHub setup
+- Provide commands for deployment
+    """)
+    
+    if st.button("📝 View setup_github.ps1 contents", key="view_setup_script"):
+        try:
+            with open("scripts/setup_github.ps1", "r") as f:
+                script_content = f.read()
+            st.code(script_content, language="powershell")
+        except:
+            st.error("Could not read scripts/setup_github.ps1")
 
 # Footer
 st.markdown("---")
