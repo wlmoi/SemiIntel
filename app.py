@@ -8,8 +8,10 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import json
+import os
+import sys
 
-# Configure page
+# Configure page - Must be first Streamlit command
 st.set_page_config(
     page_title="SEMIINTEL - Semiconductor Intelligence Platform",
     page_icon="🔬",
@@ -76,21 +78,53 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Import modules
+# Import modules with better error handling
+ML_AVAILABLE = False
+IMPORT_ERRORS = []
+
 try:
     from modules.ml_analyzer import MLPipeline, SeverityClassifier, IssueClusterer, PerformancePredictor, AnomalyDetector
-    from modules.nlp_analyzer import NLPAnalyzer, NamedEntityRecognizer, KeywordExtractor, SentimentAnalyzer
-    from modules.dataset_loader import KaggleDatasetRegistry, SyntheticDataGenerator
-    from modules.dorking_engine import DorkingEngine
-    from modules.github_scanner import GitHubScanner, StackOverflowScanner, VerificationAnalyzer
     ML_AVAILABLE = True
 except ImportError as e:
-    ML_AVAILABLE = False
-    st.error(f"⚠️ Module import error: {e}")
+    IMPORT_ERRORS.append(f"ML Analyzer: {e}")
+
+try:
+    from modules.nlp_analyzer import NLPAnalyzer, NamedEntityRecognizer, KeywordExtractor, SentimentAnalyzer
+except ImportError as e:
+    IMPORT_ERRORS.append(f"NLP Analyzer: {e}")
+
+try:
+    from modules.dataset_loader import KaggleDatasetRegistry, SyntheticDataGenerator
+except ImportError as e:
+    IMPORT_ERRORS.append(f"Dataset Loader: {e}")
+
+try:
+    from modules.dorking_engine import DorkingEngine
+except ImportError as e:
+    IMPORT_ERRORS.append(f"Dorking Engine: {e}")
+
+try:
+    from modules.github_scanner import GitHubScanner, StackOverflowScanner, VerificationAnalyzer
+except ImportError as e:
+    IMPORT_ERRORS.append(f"GitHub Scanner: {e}")
+
+# Show import errors if any (but don't fail completely)
+if IMPORT_ERRORS and not ML_AVAILABLE:
+    with st.expander("⚠️ Module Import Warnings", expanded=False):
+        for error in IMPORT_ERRORS:
+            st.warning(error)
+        st.info("Some features may be limited. The app will still demonstrate core functionality.")
+
+# Detect if running on Streamlit Cloud
+IS_STREAMLIT_CLOUD = os.getenv("STREAMLIT_SHARING_MODE") is not None or os.getenv("STREAMLIT_SERVER_PORT") == "8501"
 
 # Sidebar Navigation
 st.sidebar.markdown("## 🔬 SEMIINTEL")
 st.sidebar.markdown("**Semiconductor Intelligence Platform**")
+
+if IS_STREAMLIT_CLOUD:
+    st.sidebar.success("☁️ Running on Streamlit Cloud")
+
 st.sidebar.markdown("---")
 
 page = st.sidebar.radio(
@@ -1963,19 +1997,23 @@ AZURE_WEBAPP_NAME: {workflow_config}  # your app name here
                 
                 if st.button("📝 Update Workflow File"):
                     try:
-                        with open(".github/workflows/azure-webapps-python.yml", "r") as f:
-                            content = f.read()
-                        
-                        updated_content = content.replace(
-                            "AZURE_WEBAPP_NAME: your-app-name",
-                            f"AZURE_WEBAPP_NAME: {workflow_config}"
-                        )
-                        
-                        with open(".github/workflows/azure-webapps-python.yml", "w") as f:
-                            f.write(updated_content)
-                        
-                        st.success("✅ Workflow file updated!")
-                        st.info("Don't forget to commit and push this change!")
+                        workflow_path = ".github/workflows/azure-webapps-python.yml"
+                        if not os.path.exists(workflow_path):
+                            st.error(f"Workflow file not found: {workflow_path}")
+                        else:
+                            with open(workflow_path, "r") as f:
+                                content = f.read()
+                            
+                            updated_content = content.replace(
+                                "AZURE_WEBAPP_NAME: your-app-name",
+                                f"AZURE_WEBAPP_NAME: {workflow_config}"
+                            )
+                            
+                            with open(workflow_path, "w") as f:
+                                f.write(updated_content)
+                            
+                            st.success("✅ Workflow file updated!")
+                            st.info("Don't forget to commit and push this change!")
                     except Exception as e:
                         st.error(f"Error: {e}")
         
@@ -2255,11 +2293,16 @@ This script will:
     
     if st.button("📝 View setup_github.ps1 contents", key="view_setup_script"):
         try:
-            with open("scripts/setup_github.ps1", "r") as f:
-                script_content = f.read()
-            st.code(script_content, language="powershell")
-        except:
-            st.error("Could not read scripts/setup_github.ps1")
+            script_path = "scripts/setup_github.ps1"
+            if not os.path.exists(script_path):
+                st.warning(f"Script file not found: {script_path}")
+                st.info("This feature is available when running locally with the full repository.")
+            else:
+                with open(script_path, "r") as f:
+                    script_content = f.read()
+                st.code(script_content, language="powershell")
+        except Exception as e:
+            st.error(f"Could not read scripts/setup_github.ps1: {e}")
 
 # Footer
 st.markdown("---")
@@ -2270,3 +2313,14 @@ st.markdown("""
     <p style="font-size: 0.85rem;">ML | NLP | OSINT | Datasets</p>
 </div>
 """, unsafe_allow_html=True)
+
+# Health check info (hidden in expander for debugging)
+if st.sidebar.checkbox("🔧 System Info", value=False):
+    st.sidebar.markdown("### System Information")
+    st.sidebar.text(f"Python: {sys.version.split()[0]}")
+    st.sidebar.text(f"Streamlit: {st.__version__}")
+    st.sidebar.text(f"ML Available: {ML_AVAILABLE}")
+    st.sidebar.text(f"Working Dir: {os.getcwd()}")
+    if IS_STREAMLIT_CLOUD:
+        st.sidebar.success("Running on Streamlit Cloud")
+

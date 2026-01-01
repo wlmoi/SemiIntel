@@ -9,6 +9,14 @@
 
 ---
 
+## 🌐 Live Demo
+
+**Try the app now:** [https://semiintel-wlmoi.streamlit.app](https://semiintel-wlmoi.streamlit.app)
+
+No installation required! The application is deployed on Streamlit Cloud and ready to use.
+
+---
+
 ## 🚀 Quick Start
 
 ### Run the Web Application

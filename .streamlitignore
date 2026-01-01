@@ -1,0 +1,48 @@
+# Files and directories to ignore when deploying to Streamlit Cloud
+
+# Development and testing
+.git
+.github
+.gitignore
+.devcontainer
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.coverage
+htmlcov
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Scripts and config
+scripts/
+.vscode/
+*.sh
+*.bat
+*.ps1
+
+# Environment
+.env
+.venv
+venv/
+env/
+
+# Testing
+tests/
+test_*.py
+*_test.py
+
+# Build artifacts
+build/
+dist/
+*.egg-info
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
