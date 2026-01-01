@@ -17,45 +17,68 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Professional CSS with Times New Roman
 st.markdown("""
 <style>
+    * {
+        font-family: 'Times New Roman', Times, serif;
+    }
+    
+    html, body, [class*="css"] {
+        font-family: 'Times New Roman', Times, serif;
+    }
+    
     .main-header {
-        font-size: 3rem;
-        font-weight: bold;
-        color: #1f77b4;
+        font-size: 2.8rem;
+        font-weight: 600;
+        color: #1a3a52;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
+        letter-spacing: 0.5px;
+        border-bottom: 3px solid #1f77b4;
+        padding-bottom: 1rem;
     }
+    
     .sub-header {
-        font-size: 1.5rem;
-        color: #ff7f0e;
-        margin-top: 2rem;
-        margin-bottom: 1rem;
+        font-size: 1.4rem;
+        color: #2c5aa0;
+        margin-top: 1.5rem;
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+        border-left: 4px solid #1f77b4;
+        padding-left: 1rem;
     }
+    
     .metric-card {
-        background-color: #f0f2f6;
+        background: linear-gradient(135deg, #f0f2f6 0%, #e8eef7 100%);
         padding: 1.5rem;
-        border-radius: 10px;
+        border-radius: 8px;
         border-left: 5px solid #1f77b4;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    
     .success-box {
-        background-color: #d4edda;
-        padding: 1rem;
-        border-radius: 5px;
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        padding: 1.2rem;
+        border-radius: 8px;
         border-left: 5px solid #28a745;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    
     .info-box {
-        background-color: #d1ecf1;
-        padding: 1rem;
-        border-radius: 5px;
+        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        padding: 1.2rem;
+        border-radius: 8px;
         border-left: 5px solid #17a2b8;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    
     .warning-box {
-        background-color: #fff3cd;
-        padding: 1rem;
-        border-radius: 5px;
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        padding: 1.2rem;
+        border-radius: 8px;
         border-left: 5px solid #ffc107;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -74,20 +97,18 @@ except ImportError as e:
 
 # Sidebar Navigation
 st.sidebar.markdown("## 🔬 SEMIINTEL")
-st.sidebar.markdown("### Semiconductor Intelligence Platform")
+st.sidebar.markdown("**Semiconductor Intelligence Platform**")
 st.sidebar.markdown("---")
 
 page = st.sidebar.radio(
-    "Navigate to:",
+    "Navigate",
     ["🏠 Home", "🤖 ML Pipeline", "🧠 NLP Analysis", "📊 Datasets", "🔍 OSINT Tools", "📈 Analytics Dashboard", "🚀 Deployment"]
 )
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### About")
+st.sidebar.markdown("**About**")
 st.sidebar.info(
-    "SEMIINTEL combines OSINT techniques with machine learning "
-    "to gather and analyze semiconductor intelligence from "
-    "datasheets, GitHub issues, Stack Overflow, and technical communities."
+    "Intelligent gathering and analysis of semiconductor technical data using OSINT, ML, and NLP"
 )
 
 # ============================================================================
@@ -95,7 +116,7 @@ st.sidebar.info(
 # ============================================================================
 if page == "🏠 Home":
     st.markdown('<div class="main-header">🔬 SEMIINTEL</div>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; font-size: 1.2rem; color: #666;">Semiconductor Intelligence Platform with ML/NLP Analysis</p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; font-size: 1.1rem; color: #555;">Advanced intelligence gathering and analysis platform</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -103,35 +124,42 @@ if page == "🏠 Home":
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown("### 🔍 OSINT Capabilities")
+        st.markdown("**🔍 OSINT**")
         st.markdown("""
-        - **Google Dorking Engine**: Automated datasheet discovery
-        - **PDF Parser**: Extract metadata and technical contacts
-        - **Community Scanner**: GitHub issues & Stack Overflow analysis
-        - **Smart Query Generation**: Context-aware search patterns
+        Automated datasheet discovery
+        
+        PDF metadata extraction
+        
+        Community intelligence
+        
+        Smart query generation
         """)
     
     with col2:
-        st.markdown("### 🤖 Machine Learning")
+        st.markdown("**🤖 Machine Learning**")
         st.markdown("""
-        - **Severity Classifier**: 80.2% accuracy on issue prioritization
-        - **Issue Clusterer**: Pattern detection with 0.68 silhouette score
-        - **Performance Predictor**: 74.8% accuracy on chip performance
-        - **Anomaly Detector**: 92.1% accuracy on quality issues
+        Severity classification 80.2%
+        
+        Issue clustering 0.68 score
+        
+        Performance prediction 74.8%
+        
+        Anomaly detection 92.1%
         """)
     
     with col3:
-        st.markdown("### 🧠 NLP Analysis")
+        st.markdown("**🧠 NLP**")
         st.markdown("""
-        - **Named Entity Recognition**: Extract part numbers, specs, contacts
-        - **Keyword Extraction**: TF-IDF based technical term identification
-        - **Sentiment Analysis**: Community feedback evaluation
-        - **Topic Modeling**: LDA for document categorization
+        Entity recognition
+        
+        Keyword extraction
+        
+        Sentiment analysis
+        
+        Topic modeling
         """)
     
     st.markdown("---")
-    
-    # Statistics Dashboard
     st.markdown("### 📊 Platform Statistics")
     
     col1, col2, col3, col4 = st.columns(4)
@@ -1054,15 +1082,19 @@ elif page == "🔍 OSINT Tools":
                 engine = DorkingEngine()
                 
                 st.markdown("---")
-                st.markdown("### 📋 Generated Search Queries")
+                st.markdown("**Generated Search Queries**")
                 
                 for doc_type in doc_types:
-                    queries = engine.generate_queries(part_number, doc_type)
+                    queries = []
+                    # Generate one query per site for this document type
+                    for site in engine.DEFAULT_SITES:
+                        query = engine.generate_dork_query(part_number, doc_type, site)
+                        queries.append(query)
                     
-                    with st.expander(f"📄 {doc_type} Queries", expanded=True):
-                        for i, query in enumerate(queries[:5], 1):
+                    with st.expander(f"{doc_type.replace('_', ' ').title()}"):
+                        for i, query in enumerate(queries, 1):
                             st.code(query, language="text")
-                            st.markdown(f"[🔍 Search on Google](https://www.google.com/search?q={query.replace(' ', '+')})")
+                            st.markdown(f"[Search Google](https://www.google.com/search?q={query.replace(' ', '+')})")
                             st.markdown("---")
                 
                 st.success("✅ Queries generated successfully!")
@@ -1337,24 +1369,23 @@ elif page == "📈 Analytics Dashboard":
 # DEPLOYMENT PAGE
 # ============================================================================
 if page == "🚀 Deployment":
-    st.markdown('<div class="main-header">🚀 GitHub & Streamlit Cloud Deployment</div>', unsafe_allow_html=True)
-    st.markdown("### Interactive Deployment Workflow")
-    st.markdown("Deploy your SEMIINTEL app to the web in minutes!")
+    st.markdown('<div class="main-header">🚀 Deployment</div>', unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #555;'>Deploy to production in minutes</p>", unsafe_allow_html=True)
     st.markdown("---")
     
     # Deployment Readiness Check
-    st.markdown("## 📋 Deployment Readiness Check")
+    st.markdown("**📋 Project Status**")
     
     import os
     import subprocess
     
     # Check files
     required_files = {
-        "app.py": "Main Streamlit application",
-        "requirements.txt": "Python dependencies",
-        ".streamlit/config.toml": "Streamlit configuration",
-        "packages.txt": "System dependencies",
-        "docs/DEPLOYMENT.md": "Deployment guide",
+        "app.py": "Application",
+        "requirements.txt": "Dependencies",
+        ".streamlit/config.toml": "Configuration",
+        "packages.txt": "System packages",
+        "docs/DEPLOYMENT.md": "Guide",
         "LICENSE": "License file",
         "docs/README.md": "Project documentation"
     }
@@ -1372,35 +1403,34 @@ if page == "🚀 Deployment":
                 all_files_present = False
     
     with col2:
-        st.markdown("### Git Status")
+        st.markdown("**Git Status**")
         try:
             # Check if git is initialized
             git_init = subprocess.run(["git", "status"], capture_output=True, text=True, timeout=5)
             if git_init.returncode == 0:
-                st.success("✅ Git repository initialized")
+                st.success("Git initialized")
                 
                 # Check for remote
                 git_remote = subprocess.run(["git", "remote", "-v"], capture_output=True, text=True, timeout=5)
                 if git_remote.stdout.strip():
-                    st.success("✅ Remote repository configured")
-                    with st.expander("View remote URLs"):
+                    st.success("Remote configured")
+                    with st.expander("View remote"):
                         st.code(git_remote.stdout)
                 else:
-                    st.warning("⚠️ No remote repository configured")
+                    st.warning("No remote configured")
                 
                 # Check for uncommitted changes
                 git_status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, timeout=5)
                 if git_status.stdout.strip():
-                    st.info(f"ℹ️ {len(git_status.stdout.strip().splitlines())} uncommitted changes")
+                    st.info(f"{len(git_status.stdout.strip().splitlines())} uncommitted changes")
                 else:
-                    st.success("✅ No uncommitted changes")
+                    st.success("All changes committed")
             else:
-                st.warning("⚠️ Git not initialized")
+                st.warning("Git not initialized")
         except Exception as e:
-            st.error(f"❌ Git check failed: {e}")
+            st.error(f"Git check failed")
     
     st.markdown("---")
-    
     # Deployment Platform Selection
     st.markdown("## 🎯 Choose Your Deployment Platform")
     
@@ -1414,202 +1444,187 @@ if page == "🚀 Deployment":
     
     # Deployment Steps
     if platform == "☁️ Streamlit Cloud (Recommended)":
-        st.markdown("## 📝 Streamlit Cloud Deployment")
+        st.markdown("**📝 Streamlit Cloud**")
         
-        tab1, tab2, tab3, tab4 = st.tabs(["1️⃣ Setup Git", "2️⃣ Push to GitHub", "3️⃣ Deploy to Streamlit", "4️⃣ Verify & Monitor"])
-    
-    with tab1:
-        st.markdown("### Step 1: Git Setup")
+        tab1, tab2, tab3, tab4 = st.tabs(["Setup Git", "Push Code", "Deploy", "Verify"])
         
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("#### Check Git Installation")
-            if st.button("🔍 Check Git", key="check_git"):
-                try:
-                    result = subprocess.run(["git", "--version"], capture_output=True, text=True, timeout=5)
-                    if result.returncode == 0:
-                        st.success(f"Git is installed: {result.stdout.strip()}")
-                    else:
-                        st.error("Git is not installed")
-                        st.markdown("[Download Git](https://git-scm.com/download/win)")
-                except:
-                    st.error("Git is not installed or not in PATH")
-                    st.markdown("[Download Git](https://git-scm.com/download/win)")
-        
-        with col2:
-            st.markdown("#### Configure Git")
-            with st.form("git_config"):
-                git_name = st.text_input("Your Name", placeholder="John Doe")
-                git_email = st.text_input("Your Email", placeholder="john@example.com")
-                
-                if st.form_submit_button("⚙️ Configure Git"):
-                    if git_name and git_email:
-                        try:
-                            subprocess.run(["git", "config", "user.name", git_name], check=True)
-                            subprocess.run(["git", "config", "user.email", git_email], check=True)
-                            st.success(f"✅ Git configured for {git_name}")
-                        except:
-                            st.error("Failed to configure Git")
-                    else:
-                        st.warning("Please fill in both fields")
-        
-        st.markdown("---")
-        st.markdown("#### Initialize Repository")
-        
-        if st.button("🎬 Initialize Git Repository", key="init_git"):
-            try:
-                result = subprocess.run(["git", "init"], capture_output=True, text=True)
-                if result.returncode == 0:
-                    st.success("✅ Git repository initialized")
-                else:
-                    st.info("Repository already initialized")
-            except Exception as e:
-                st.error(f"Error: {e}")
-        
-        st.markdown("---")
-        st.markdown("#### Commands Reference")
-        st.code("""
-# Initialize git repository
-git init
-
-# Configure user
-git config user.name "Your Name"
-git config user.email "your.email@example.com"
-
-# Check status
-git status
-        """, language="bash")
-    
-    with tab2:
-        st.markdown("### Step 2: Push to GitHub")
-        
-        st.markdown("#### Create GitHub Repository")
-        st.info("📝 Go to [github.com/new](https://github.com/new) and create a repository named **SemiIntel**")
-        st.warning("⚠️ Make it **Public** (required for free Streamlit Cloud deployment)")
-        
-        st.markdown("---")
-        st.markdown("#### Add Remote Repository")
-        
-        with st.form("add_remote"):
-            repo_url = st.text_input(
-                "GitHub Repository URL",
-                placeholder="https://github.com/username/SemiIntel.git",
-                help="Copy this from your GitHub repository"
-            )
+        with tab1:
+            st.markdown("**Git Setup**")
             
-            if st.form_submit_button("🔗 Add Remote"):
-                if repo_url:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Check Installation**")
+                if st.button("Check Git", key="check_git"):
                     try:
-                        # Check if remote exists
-                        check_remote = subprocess.run(["git", "remote", "get-url", "origin"], 
-                                                     capture_output=True, text=True)
-                        
-                        if check_remote.returncode == 0:
-                            # Update existing remote
-                            subprocess.run(["git", "remote", "set-url", "origin", repo_url], check=True)
-                            st.success(f"✅ Remote updated: {repo_url}")
-                        else:
-                            # Add new remote
-                            subprocess.run(["git", "remote", "add", "origin", repo_url], check=True)
-                            st.success(f"✅ Remote added: {repo_url}")
-                    except Exception as e:
-                        st.error(f"Error: {e}")
-                else:
-                    st.warning("Please enter a repository URL")
-        
-        st.markdown("---")
-        st.markdown("#### Commit and Push")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            commit_message = st.text_input(
-                "Commit Message",
-                value="Initial commit: SEMIINTEL web application"
-            )
-            
-            if st.button("📦 Stage All Files", key="stage_files"):
-                try:
-                    subprocess.run(["git", "add", "."], check=True)
-                    st.success("✅ Files staged")
-                except Exception as e:
-                    st.error(f"Error: {e}")
-            
-            if st.button("💾 Commit Changes", key="commit_changes"):
-                try:
-                    subprocess.run(["git", "commit", "-m", commit_message], check=True)
-                    st.success("✅ Changes committed")
-                except Exception as e:
-                    st.error(f"Error: {e}")
-        
-        with col2:
-            branch_name = st.selectbox("Branch", ["main", "master"])
-            
-            if st.button("🚀 Push to GitHub", type="primary", key="push_github"):
-                with st.spinner("Pushing to GitHub..."):
-                    try:
-                        # Try to push
-                        result = subprocess.run(
-                            ["git", "push", "-u", "origin", branch_name],
-                            capture_output=True,
-                            text=True,
-                            timeout=30
-                        )
-                        
+                        result = subprocess.run(["git", "--version"], capture_output=True, text=True, timeout=5)
                         if result.returncode == 0:
-                            st.success("🎉 Successfully pushed to GitHub!")
-                            st.balloons()
+                            st.success(f"Git is installed: {result.stdout.strip()}")
                         else:
-                            # Try renaming branch if it fails
-                            subprocess.run(["git", "branch", "-M", branch_name], check=True)
-                            result2 = subprocess.run(
+                            st.error("Git is not installed")
+                            st.markdown("[Download Git](https://git-scm.com/download/win)")
+                    except:
+                        st.error("Git is not installed or not in PATH")
+                        st.markdown("[Download Git](https://git-scm.com/download/win)")
+            
+            with col2:
+                st.markdown("**Configure User**")
+                with st.form("git_config"):
+                    git_name = st.text_input("Name", placeholder="John Doe")
+                    git_email = st.text_input("Email", placeholder="john@example.com")
+                    
+                    if st.form_submit_button("Configure"):
+                        if git_name and git_email:
+                            try:
+                                subprocess.run(["git", "config", "user.name", git_name], check=True)
+                                subprocess.run(["git", "config", "user.email", git_email], check=True)
+                                st.success(f"Configured for {git_name}")
+                            except:
+                                st.error("Failed to configure")
+                        else:
+                            st.warning("Please fill in both fields")
+            
+            st.markdown("---")
+            st.markdown("#### Initialize Repository")
+            
+            if st.button("Initialize Git", key="init_git"):
+                try:
+                    result = subprocess.run(["git", "init"], capture_output=True, text=True)
+                    if result.returncode == 0:
+                        st.success("Git initialized")
+                    else:
+                        st.info("Already initialized")
+                except Exception as e:
+                    st.error(f"Error")
+            
+            st.markdown("---")
+            st.markdown("**Command Reference**")
+            st.code("""
+git init
+git config user.name "Your Name"
+git config user.email "your@email.com"
+git status
+            """, language="bash")
+        
+        with tab2:
+            st.markdown("**Push to GitHub**")
+            
+            st.markdown("**Create Repository**")
+            st.info("Go to [github.com/new](https://github.com/new) and create a public repository")
+            
+            st.markdown("**Add Remote**")
+            
+            with st.form("add_remote"):
+                repo_url = st.text_input(
+                    "GitHub URL",
+                    placeholder="https://github.com/username/SemiIntel.git"
+                )
+                
+                if st.form_submit_button("Add Remote"):
+                    if repo_url:
+                        try:
+                            # Check if remote exists
+                            check_remote = subprocess.run(["git", "remote", "get-url", "origin"], 
+                                                         capture_output=True, text=True)
+                            
+                            if check_remote.returncode == 0:
+                                # Update existing remote
+                                subprocess.run(["git", "remote", "set-url", "origin", repo_url], check=True)
+                                st.success(f"Remote updated")
+                            else:
+                                # Add new remote
+                                subprocess.run(["git", "remote", "add", "origin", repo_url], check=True)
+                                st.success(f"Remote added")
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+                    else:
+                        st.warning("Enter repository URL")
+            
+            st.markdown("---")
+            st.markdown("**Commit and Push**")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                commit_message = st.text_input(
+                    "Message",
+                    value="Initial commit: SEMIINTEL web application"
+                )
+                
+                if st.button("Stage Files", key="stage_files"):
+                    try:
+                        subprocess.run(["git", "add", "."], check=True)
+                        st.success("Files staged")
+                    except Exception as e:
+                        st.error(f"Error")
+                
+                if st.button("Commit", key="commit_changes"):
+                    try:
+                        subprocess.run(["git", "commit", "-m", commit_message], check=True)
+                        st.success("Committed")
+                    except Exception as e:
+                        st.error(f"Error")
+            
+            with col2:
+                branch_name = st.selectbox("Branch", ["main", "master"])
+                
+                if st.button("Push to GitHub", type="primary", key="push_github"):
+                    with st.spinner("Pushing..."):
+                        try:
+                            result = subprocess.run(
                                 ["git", "push", "-u", "origin", branch_name],
                                 capture_output=True,
                                 text=True,
                                 timeout=30
                             )
-                            if result2.returncode == 0:
-                                st.success("🎉 Successfully pushed to GitHub!")
+                            
+                            if result.returncode == 0:
+                                st.success("Pushed successfully")
                                 st.balloons()
                             else:
-                                st.error(f"Push failed: {result2.stderr}")
-                                st.info("You may need to authenticate with GitHub")
-                    except subprocess.TimeoutExpired:
-                        st.warning("Push is taking longer than expected. Check your terminal.")
-                    except Exception as e:
-                        st.error(f"Error: {e}")
-        
-        st.markdown("---")
-        st.markdown("#### Manual Commands")
-        st.code(f"""
-# Stage all files
+                                subprocess.run(["git", "branch", "-M", branch_name], check=True)
+                                result2 = subprocess.run(
+                                    ["git", "push", "-u", "origin", branch_name],
+                                    capture_output=True,
+                                    text=True,
+                                    timeout=30
+                                )
+                                if result2.returncode == 0:
+                                    st.success("Pushed successfully")
+                                    st.balloons()
+                                else:
+                                    st.error("Push failed")
+                                    st.info("Check authentication")
+                        except subprocess.TimeoutExpired:
+                            st.warning("Push taking longer")
+                        except Exception as e:
+                            st.error("Error")
+            
+            st.markdown("---")
+            st.markdown("**Commands**")
+            st.code(f"""
 git add .
-
-# Commit changes
 git commit -m "{commit_message}"
-
-# Add remote (if not added)
-git remote add origin YOUR_GITHUB_URL
-
-# Push to GitHub
+git remote add origin YOUR_URL
 git push -u origin {branch_name}
-        """, language="bash")
-    
-    with tab3:
-        st.markdown("### Step 3: Deploy to Streamlit Cloud")
+            """, language="bash")
+            st.markdown("---")
+            st.markdown("**Commands Reference**")
+            st.code(f"""
+git add .
+git commit -m "{commit_message}"
+git remote add origin YOUR_URL
+git push -u origin {branch_name}
+            """, language="bash")
         
-        st.markdown("#### Streamlit Cloud Setup")
-        
-        st.info("""ℹ️ **Streamlit Cloud** provides free hosting for Streamlit apps directly from GitHub.
-        
-**Requirements:**
-- GitHub account with your code pushed
-- Public repository (or Streamlit Cloud Pro for private repos)
-        """)
-        
-        st.markdown("---")
-        st.markdown("#### Deployment Steps")
+        with tab3:
+            st.markdown("**Deploy to Streamlit**")
+            
+            st.markdown("**Cloud Setup**")
+            
+            st.info("Free hosting from GitHub repository. Requires public repo.")
+            
+            st.markdown("**Steps**")
         
         steps = [
             {
@@ -1697,11 +1712,11 @@ git push -u origin {branch_name}
 `https://YOUR_USERNAME-semiintel-app-xxxxx.streamlit.app`
         
 📋 Copy this URL and add it to your README.md!""")
-    
-    with tab4:
-        st.markdown("### Step 4: Verify & Monitor")
         
-        st.markdown("#### Post-Deployment Checklist")
+        with tab4:
+            st.markdown("**Verify and Monitor**")
+        
+        st.markdown("**Checklist**")
         
         checklist = [
             "App loads without errors",
@@ -1768,32 +1783,32 @@ git push -u origin {branch_name}
 - View build logs for errors
 - Rollback if needed
             """)
-        
-        st.markdown("---")
-        st.markdown("#### Common Issues & Solutions")
-        
-        issues = [
-            {
-                "problem": "Module import errors",
-                "solution": "Check all modules are in repository and requirements.txt is complete"
-            },
-            {
-                "problem": "App crashes on startup",
-                "solution": "View logs in Streamlit Cloud dashboard for specific error messages"
-            },
-            {
-                "problem": "Slow performance",
-                "solution": "Add @st.cache_data and @st.cache_resource decorators to expensive operations"
-            },
-            {
-                "problem": "Build timeout",
-                "solution": "Reduce dependencies or use lighter alternatives in requirements.txt"
-            }
-        ]
-        
-        for issue in issues:
-            with st.expander(f"❓ {issue['problem']}"):
-                st.markdown(f"**Solution:** {issue['solution']}")
+            
+            st.markdown("---")
+            st.markdown("#### Common Issues & Solutions")
+            
+            issues = [
+                {
+                    "problem": "Module import errors",
+                    "solution": "Check all modules are in repository and requirements.txt is complete"
+                },
+                {
+                    "problem": "App crashes on startup",
+                    "solution": "View logs in Streamlit Cloud dashboard for specific error messages"
+                },
+                {
+                    "problem": "Slow performance",
+                    "solution": "Add @st.cache_data and @st.cache_resource decorators to expensive operations"
+                },
+                {
+                    "problem": "Build timeout",
+                    "solution": "Reduce dependencies or use lighter alternatives in requirements.txt"
+                }
+            ]
+            
+            for issue in issues:
+                with st.expander(f"❓ {issue['problem']}"):
+                    st.markdown(f"**Solution:** {issue['solution']}")
     
     elif platform == "🌐 Azure Web App":
         st.markdown("## 🌐 Azure Web App Deployment (GitHub Actions)")
@@ -2176,7 +2191,7 @@ gcloud run deploy --image gcr.io/PROJECT-ID/semiintel --platform managed
 Run the automated setup script in your terminal:
     
 ```powershell
-.\scripts\setup_github.ps1
+.\\scripts\\setup_github.ps1
 ```
     
 This script will:
@@ -2198,9 +2213,9 @@ This script will:
 # Footer
 st.markdown("---")
 st.markdown("""
-<div style="text-align: center; color: #666; padding: 2rem;">
-    <p><strong>SEMIINTEL</strong> - Semiconductor Intelligence Platform</p>
-    <p>Developed for STMicroelectronics IC Design & Verification</p>
-    <p>🔬 ML/NLP Analysis | 🔍 OSINT Tools | 📊 10 Kaggle Datasets | 🤖 4 ML Models</p>
+<div style="text-align: center; color: #666; padding: 2rem; font-family: 'Times New Roman', Times, serif;">
+    <p><strong>SEMIINTEL</strong></p>
+    <p style="font-size: 0.9rem;">Semiconductor Intelligence Platform</p>
+    <p style="font-size: 0.85rem;">ML | NLP | OSINT | Datasets</p>
 </div>
 """, unsafe_allow_html=True)
