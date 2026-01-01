@@ -25,36 +25,47 @@ This project includes automated workflows for testing and deployment.
 
 **Requirements:**
 1. Azure Web App created
-2. Publish Profile downloaded from Azure Portal
-3. GitHub Secret `AZURE_WEBAPP_PUBLISH_PROFILE` configured
+2. Azure Service Principal with contributor role
+3. GitHub Secrets configured
 
 **Setup Steps:**
 
-1. Create Azure Web App
-   ```
-   Go to Azure Portal → Create Web App
-   Runtime: Python 3.8
-   ```
-
-2. Download Publish Profile
-   ```
-   Azure Portal → Your Web App → Get Publish Profile
+1. **Create Azure Web App**
+   ```bash
+   # In Azure Portal or Azure CLI
+   az webapp create --resource-group <resource-group> \
+     --plan <app-service-plan> \
+     --name semiintel-app \
+     --runtime "PYTHON:3.8"
    ```
 
-3. Add GitHub Secret
+2. **Create Service Principal**
+   ```bash
+   az ad sp create-for-rbac --name "semiintel-github-actions" \
+     --role contributor \
+     --scopes /subscriptions/<subscription-id>/resourceGroups/<resource-group> \
+     --sdk-auth
    ```
-   Settings → Secrets and variables → Actions
-   Name: AZURE_WEBAPP_PUBLISH_PROFILE
-   Value: (paste entire .publishSettings file)
-   ```
+   
+   This outputs JSON with credentials you'll need.
 
-4. Update Workflow
+3. **Add GitHub Secrets**
+   
+   Go to: Repository → Settings → Secrets and variables → Actions
+   
+   Add these secrets:
+   - `AZURE_CLIENT_ID` - Application (client) ID from service principal
+   - `AZURE_CLIENT_SECRET` - Client secret from service principal  
+   - `AZURE_TENANT_ID` - Directory (tenant) ID from service principal
+   - `AZURE_SUBSCRIPTION_ID` - Your Azure subscription ID
+
+4. **Update Workflow**
    ```yaml
    env:
-     AZURE_WEBAPP_NAME: your-app-name
+     AZURE_WEBAPP_NAME: your-actual-app-name
    ```
 
-5. Commit and Push
+5. **Commit and Push**
    ```bash
    git add .
    git commit -m "Configure Azure deployment"
@@ -66,6 +77,7 @@ This project includes automated workflows for testing and deployment.
 - Sets up Python 3.8
 - Installs dependencies
 - Uploads artifacts
+- Logs in to Azure using service principal
 - Deploys to Azure Web App
 
 ---
@@ -83,10 +95,23 @@ For Streamlit Cloud (recommended for this project):
 
 ## Troubleshooting
 
+### Missing Azure Credentials Error
+**Issue:** `Error: Deployment Failed, Error: No credentials found`
+
+**Solution:** Add the Azure Login step with service principal credentials:
+1. Create a service principal in Azure
+2. Add GitHub secrets: `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_SUBSCRIPTION_ID`, `AZURE_TENANT_ID`
+3. Push updated workflow
+
 ### Python Cache Error (400)
 **Issue:** `Cache service responded with 400`
 
 **Solution:** Already fixed in latest version of setup-python@v5
+
+### Spacy Installation Error
+**Issue:** `ERROR: No matching distribution found for numpy<3.0.0,>=2.0.0`
+
+**Solution:** Already fixed - requirements.txt pins spacy<3.7.0 for Python 3.8 compatibility
 
 ### Deployment Fails
 **Check:**
