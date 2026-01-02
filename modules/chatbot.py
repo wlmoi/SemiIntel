@@ -37,7 +37,15 @@ class ConversationalRetrievalBot:
             raise ValueError("knowledge_snippets cannot be empty")
 
         self.knowledge = knowledge_snippets
-        self.vectorizer = TfidfVectorizer(stop_words="english")
+        # TfidfVectorizer with bigrams to better match queries
+        self.vectorizer = TfidfVectorizer(
+            stop_words="english",
+            lowercase=True,
+            token_pattern=r"(?u)\b\w+\b",
+            min_df=1,
+            max_df=1.0,
+            ngram_range=(1, 2),
+        )
         self.doc_matrix = self.vectorizer.fit_transform(
             [doc["content"] for doc in self.knowledge]
         )
@@ -148,11 +156,11 @@ def build_default_knowledge(datasets: List[Dict]) -> List[Dict[str, str]]:
             }
         )
 
-    # Add more specific guidance entries
+    # Add more specific guidance entries with expanded vocabulary
     guidance_entries = [
         {
             "title": "Available Datasets",
-            "content": "dataset kaggle UCI NASA github stack overflow semiconductor manufacturing wafer defect issue bug review specification benchmark",
+            "content": "datasets available data sources kaggle UCI NASA github stack overflow semiconductor manufacturing wafer defect issue bug review specification benchmark machine learning training",
             "summary": (
                 "13 curated datasets available: GitHub issues, Stack Overflow, IC performance, "
                 "semiconductor manufacturing, IoT failures, hardware bugs, technical docs, electronics reviews, "
