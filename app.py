@@ -341,24 +341,31 @@ if page == "🏠 Home":
 
     with c1:
         st.image(
-            "https://ui-avatars.com/api/?name=William+Anthony&background=1f77b4&color=ffffff&size=256",
-            width=180,
+            r"img/TMIND_Toyota Mobility Innovation Development (T-MIND)_53_WILLIAM ANTHONY.jpg",
+            width=200,
         )
         st.markdown("**William Anthony**")
         st.caption("Creator of SEMIINTEL · Digital Systems & FPGA")
         st.markdown("[LinkedIn](https://www.linkedin.com/in/wlmoi/) • [GitHub](https://github.com/wlmoi)")
         st.caption("Batam, Indonesia")
         st.markdown("**Core Skills**")
-        st.markdown("VHDL · Verilog · ModelSim · Intel Quartus · MATLAB")
+        st.markdown(
+            "VHDL · Verilog · ModelSim · Vivado · Icarus Verilog · Openlane2 · KLayout · Magic · Intel Quartus · MATLAB"
+        )
 
     with c2:
-        st.markdown("**Focus Areas**")
-        st.markdown(
-            "- OSINT pipelines for GitHub / StackOverflow\n"
-            "- ML for severity, clustering, anomaly detection\n"
-            "- NLP for specs understanding (NER, sentiment, keywords)\n"
-            "- Deployment, dashboards, and developer enablement"
-        )
+        st.markdown("**Gallery**")
+        g1, g2, g3 = st.columns(3)
+        with g1:
+            st.image("img/ChipathonCertificate.png", use_column_width=True, caption="Chipathon Certificate")
+        with g2:
+            st.image("img/PadframeCreated.jpeg", use_column_width=True, caption="Padframe Layout")
+        with g3:
+            st.image(
+                r"img/TMIND_Toyota Mobility Innovation Development (T-MIND)_53_WILLIAM ANTHONY.jpg",
+                use_column_width=True,
+                caption="T-MIND Presentation",
+            )
 
         st.markdown("**Recent Highlights**")
         st.markdown(
