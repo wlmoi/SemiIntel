@@ -360,47 +360,61 @@ elif page == "💬 Chatbot":
             st.session_state.chatbot = None
     
     if st.session_state.chatbot:
-        # Display chat history
-        st.markdown("### Chat History")
-        history_col1, history_col2 = st.columns([4, 1])
-        with history_col1:
-            if st.session_state.chatbot.history:
-                for turn in st.session_state.chatbot.history:
-                    with st.chat_message("user"):
-                        st.write(turn.user)
-                    with st.chat_message("assistant"):
-                        st.write(turn.bot)
-            else:
-                st.info("Start a conversation below...")
+        # Initialize message list if not present
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
         
-        with history_col2:
-            if st.button("🗑️ Clear History", use_container_width=True):
+        # Display chat history
+        st.markdown("### 💬 Chat History")
+        
+        if st.session_state.messages:
+            for msg in st.session_state.messages:
+                with st.chat_message(msg["role"]):
+                    st.write(msg["content"])
+                    if msg["role"] == "assistant" and "metadata" in msg:
+                        meta = msg["metadata"]
+                        if meta.get("source"):
+                            st.caption(
+                                f"**Source:** {meta['source']} | "
+                                f"**Confidence:** {meta['score']:.2f}"
+                            )
+                        if meta.get("link"):
+                            st.caption(f"[📚 Learn more]({meta['link']})")
+        else:
+            st.info("💡 Start by asking about datasets, analysis methods, or platform features!")
+        
+        # Clear history button
+        col1, col2 = st.columns([4, 1])
+        with col2:
+            if st.button("🗑️ Clear", use_container_width=True):
+                st.session_state.messages = []
                 st.session_state.chatbot.clear_history()
                 st.rerun()
         
         # Query input
         st.markdown("---")
-        st.markdown("### Ask a Question")
-        user_query = st.text_input(
-            "Your question:",
-            placeholder="E.g., 'What datasets are available?' or 'How do I use TF-IDF analysis?'",
-            label_visibility="collapsed"
+        st.markdown("### ❓ Ask a Question")
+        
+        user_query = st.chat_input(
+            "What would you like to know?",
+            key="chatbot_input"
         )
         
         if user_query:
+            # Get response
             response = st.session_state.chatbot.ask(user_query)
             
-            with st.chat_message("user"):
-                st.write(user_query)
-            
-            with st.chat_message("assistant"):
-                st.write(response["answer"])
-            
-            # Show metadata
-            if response["source"]:
-                st.caption(f"**Source:** {response['source']} (Confidence: {response['score']:.2f})")
-            if response["link"]:
-                st.caption(f"[Learn more]({response['link']})")
+            # Add to messages
+            st.session_state.messages.append({"role": "user", "content": user_query})
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": response["answer"],
+                "metadata": {
+                    "source": response.get("source"),
+                    "score": response.get("score", 0.0),
+                    "link": response.get("link"),
+                }
+            })
             
             st.rerun()
     

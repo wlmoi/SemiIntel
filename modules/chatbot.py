@@ -48,21 +48,49 @@ class ConversationalRetrievalBot:
         history_text = " ".join(turn.user + " " + turn.bot for turn in self.history)
         return (history_text + " " + query).strip()
 
-    def ask(self, query: str) -> Dict[str, Optional[str]]:
+    def ask(self, query: str, min_confidence: float = 0.25) -> Dict[str, Optional[str]]:
+        """
+        Ask the chatbot a question.
+        
+        Args:
+            query: User's question
+            min_confidence: Minimum similarity score (0-1) to provide an answer.
+                           If below this, returns a fallback response.
+        
+        Returns:
+            Dictionary with answer, source, score, and link
+        """
         if not query or not query.strip():
             return {
                 "answer": "Please provide a question about datasets, ML, or OSINT.",
                 "source": None,
                 "score": 0.0,
+                "link": None,
             }
 
         context_query = self._build_context_query(query)
         query_vec = self.vectorizer.transform([context_query])
         scores = cosine_similarity(query_vec, self.doc_matrix).ravel()
         best_idx = int(scores.argmax())
-        best_doc = self.knowledge[best_idx]
         best_score = float(scores[best_idx]) if scores.size else 0.0
 
+        # Check confidence threshold
+        if best_score < min_confidence:
+            fallback = (
+                f"I'm not sure how to answer that. I can help with:\n"
+                f"• Available datasets and their descriptions\n"
+                f"• Data analysis methods (TF-IDF, clustering, anomaly detection)\n"
+                f"• Platform features and usage\n"
+                f"Try asking: 'What datasets are available?' or 'How do I use TF-IDF?'"
+            )
+            return {
+                "answer": fallback,
+                "source": None,
+                "score": best_score,
+                "link": None,
+            }
+
+        best_doc = self.knowledge[best_idx]
         answer = best_doc["summary"]
         if best_doc.get("cta"):
             answer = f"{answer} {best_doc['cta']}"
@@ -90,8 +118,20 @@ def build_default_knowledge(datasets: List[Dict]) -> List[Dict[str, str]]:
         rows = ds.get("rows", 0)
         source = ds.get("source", "")
         primary_use = ds.get("primary_use", "Use case not specified")
+        description = ds.get("description", "")
         license_hint = ds.get("license", "See source terms")
         link = ds.get("source_url") or ds.get("kaggle_id")
+
+        # Build rich content for TF-IDF matching
+        content_parts = [
+            title,
+            description,
+            primary_use,
+            f"rows data {rows}",
+            f"size {size_gb}",
+            source or "kaggle",
+        ]
+        content = " ".join(content_parts).lower()
 
         summary = (
             f"{title}: {primary_use}. Rows: {rows:,} | Size: {size_gb/1024:.3f} GB. "
@@ -101,24 +141,68 @@ def build_default_knowledge(datasets: List[Dict]) -> List[Dict[str, str]]:
         knowledge.append(
             {
                 "title": title,
-                "content": f"{title} {primary_use} {rows} rows {size_gb:.2f} GB {source}",
+                "content": content,
                 "summary": summary,
                 "link": link,
-                "cta": f"Download/source: {link}" if link else None,
+                "cta": f"Access at: {link}" if link else None,
             }
         )
 
-    knowledge.append(
+    # Add more specific guidance entries
+    guidance_entries = [
         {
-            "title": "Platform Guidance",
-            "content": "Use TF-IDF, clustering, anomaly detection, and OSINT scanners",
+            "title": "Available Datasets",
+            "content": "dataset kaggle UCI NASA github stack overflow semiconductor manufacturing wafer defect issue bug review specification benchmark",
             "summary": (
-                "For quick analysis, start with TF-IDF similarity, run clustering for patterns, "
-                "and use the OSINT tools for GitHub/StackOverflow enrichment."
+                "13 curated datasets available: GitHub issues, Stack Overflow, IC performance, "
+                "semiconductor manufacturing, IoT failures, hardware bugs, technical docs, electronics reviews, "
+                "MCU specs, community bugs, wafer maps, SECOM, and NASA bearing data."
             ),
             "link": None,
             "cta": None,
-        }
-    )
+        },
+        {
+            "title": "TF-IDF Text Analysis",
+            "content": "TF-IDF term frequency inverse document frequency text vectorization similarity nlp natural language processing",
+            "summary": (
+                "TF-IDF converts text to numerical vectors based on word importance. Use for document similarity, "
+                "text classification, and keyword extraction. Great for analyzing issues and specifications."
+            ),
+            "link": None,
+            "cta": None,
+        },
+        {
+            "title": "Clustering & Pattern Discovery",
+            "content": "clustering KMeans DBSCAN grouping unsupervised learning pattern discovery anomaly detection outlier",
+            "summary": (
+                "Clustering groups similar records. KMeans creates balanced groups; DBSCAN finds density-based clusters. "
+                "Use for discovering issue patterns, device failure modes, and anomalies in manufacturing data."
+            ),
+            "link": None,
+            "cta": None,
+        },
+        {
+            "title": "Classification & Severity Prediction",
+            "content": "classification supervised learning severity prediction label training random forest gradient boosting classifier categorical",
+            "summary": (
+                "Classification assigns labels (high/medium/low severity). Train on labeled data. "
+                "Useful for predicting issue severity, defect classes, and device health status."
+            ),
+            "link": None,
+            "cta": None,
+        },
+        {
+            "title": "SEMIINTEL Features",
+            "content": "SEMIINTEL osint github scanner stackoverflow verification ml pipeline nlp ner sentiment entity recognition anomaly detection dashboard",
+            "summary": (
+                "SEMIINTEL includes: (1) OSINT tools (GitHub/StackOverflow scanners), "
+                "(2) ML pipeline (severity classifier, clustering, anomaly detection), "
+                "(3) NLP analysis (NER, sentiment, keywords), (4) 13 curated datasets, (5) Analytics dashboard."
+            ),
+            "link": None,
+            "cta": None,
+        },
+    ]
 
+    knowledge.extend(guidance_entries)
     return knowledge
