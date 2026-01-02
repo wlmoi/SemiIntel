@@ -56,6 +56,63 @@ class ConversationalRetrievalBot:
         history_text = " ".join(turn.user + " " + turn.bot for turn in self.history)
         return (history_text + " " + query).strip()
 
+    def _intent_response(self, query: str) -> Optional[Dict[str, Optional[str]]]:
+        """Lightweight rule-based intents for common natural questions."""
+        q = query.lower()
+        tokens = set(q.replace("-", " ").replace("?", "").split())
+
+        # Dataset intent
+        dataset_keywords = {"dataset", "datasets", "data", "sources", "kaggle"}
+        if tokens & dataset_keywords:
+            dataset_titles = [k["title"] for k in self.knowledge if k.get("link")][:6]
+            dataset_count = sum(1 for k in self.knowledge if k.get("link"))
+            answer = (
+                f"We have {dataset_count} curated datasets covering GitHub issues, Stack Overflow, "
+                f"semiconductor manufacturing, wafer defects, IoT failures, and more. "
+                f"Top picks: {', '.join(dataset_titles)}. "
+                "Ask for details on any dataset or a specific use case."
+            )
+            self.history.append(ChatTurn(user=query, bot=answer))
+            return {
+                "answer": answer,
+                "source": "Dataset Registry",
+                "score": 0.9,
+                "link": None,
+            }
+
+        # Quick intent lookup for analysis topics
+        keyword_map = {
+            "tfidf": "TF-IDF Text Analysis",
+            "tf-idf": "TF-IDF Text Analysis",
+            "vectorizer": "TF-IDF Text Analysis",
+            "cluster": "Clustering & Pattern Discovery",
+            "clustering": "Clustering & Pattern Discovery",
+            "anomaly": "Clustering & Pattern Discovery",
+            "classify": "Classification & Severity Prediction",
+            "classification": "Classification & Severity Prediction",
+            "severity": "Classification & Severity Prediction",
+            "feature": "SEMIINTEL Features",
+            "platform": "SEMIINTEL Features",
+            "what": "Available Datasets",
+        }
+
+        for key, title in keyword_map.items():
+            if key in q:
+                doc = next((d for d in self.knowledge if d.get("title") == title), None)
+                if doc:
+                    answer = doc["summary"]
+                    if doc.get("cta"):
+                        answer = f"{answer} {doc['cta']}"
+                    self.history.append(ChatTurn(user=query, bot=answer))
+                    return {
+                        "answer": answer,
+                        "source": title,
+                        "score": 0.75,
+                        "link": doc.get("link"),
+                    }
+
+        return None
+
     def ask(self, query: str, min_confidence: float = 0.25) -> Dict[str, Optional[str]]:
         """
         Ask the chatbot a question.
@@ -75,6 +132,11 @@ class ConversationalRetrievalBot:
                 "score": 0.0,
                 "link": None,
             }
+
+        # Try rule-based intents first for natural language queries
+        intent_answer = self._intent_response(query)
+        if intent_answer:
+            return intent_answer
 
         context_query = self._build_context_query(query)
         query_vec = self.vectorizer.transform([context_query])

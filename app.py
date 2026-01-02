@@ -235,6 +235,53 @@ if page == "🏠 Home":
         st.metric("NLP Techniques", "5", help="Advanced text analysis methods")
     
     st.markdown("---")
+
+    # Featured dataset carousel
+    st.markdown("### 🎠 Featured Datasets")
+    datasets_list = []
+    if "KaggleDatasetRegistry" in globals():
+        try:
+            datasets_list = KaggleDatasetRegistry.list_datasets()
+        except Exception:
+            datasets_list = []
+
+    if datasets_list:
+        if "carousel_idx" not in st.session_state:
+            st.session_state.carousel_idx = 0
+
+        total = len(datasets_list)
+        current = st.session_state.carousel_idx % total
+        ds = datasets_list[current]
+
+        left, right = st.columns([2, 1])
+        with left:
+            st.markdown(f"**{ds.get('name', 'Dataset')}**")
+            st.markdown(ds.get("description", ""))
+            st.markdown(f"**Use Case:** {ds.get('primary_use', 'N/A')}")
+            st.caption(
+                f"Updated: {ds.get('last_updated', 'N/A')} • Source: {ds.get('source', 'Dataset provider')}"
+            )
+
+        with right:
+            st.metric("Records", f"{int(ds.get('rows', 0)):,}")
+            st.metric("Size (GB)", f"{float(ds.get('size_mb', 0))/1024:.2f}")
+            st.metric("Features", ds.get("columns", "—"))
+
+        c1, c2, c3 = st.columns([1, 2, 1])
+        with c1:
+            if st.button("◀ Prev", key="carousel_prev"):
+                st.session_state.carousel_idx = (st.session_state.carousel_idx - 1) % total
+                st.rerun()
+        with c2:
+            st.caption(f"Showing {current + 1} of {total}")
+        with c3:
+            if st.button("Next ▶", key="carousel_next"):
+                st.session_state.carousel_idx = (st.session_state.carousel_idx + 1) % total
+                st.rerun()
+    else:
+        st.info("Dataset registry is unavailable for carousel preview.")
+
+    st.markdown("---")
     
     # Dataset Overview
     st.markdown("### 📦 Dataset Registry")
@@ -287,49 +334,47 @@ if page == "🏠 Home":
     st.markdown("### 🚀 Getting Started")
     st.info("👈 Use the sidebar to navigate through different features of SEMIINTEL")
 
-    # Hero / About the Author (Get to know me)
+    # Creator section
     st.markdown("---")
-    # Use a two-column layout: main hero and quick stats
-    left, right = st.columns([3, 1])
-    with left:
+    st.markdown("### 👤 Creator")
+    c1, c2 = st.columns([1, 2])
+
+    with c1:
+        st.image(
+            "https://ui-avatars.com/api/?name=William+Anthony&background=1f77b4&color=ffffff&size=256",
+            width=180,
+        )
+        st.markdown("**William Anthony**")
+        st.caption("Creator of SEMIINTEL · Digital Systems & FPGA")
+        st.markdown("[LinkedIn](https://www.linkedin.com/in/wlmoi/) • [GitHub](https://github.com/wlmoi)")
+        st.caption("Batam, Indonesia")
+        st.markdown("**Core Skills**")
+        st.markdown("VHDL · Verilog · ModelSim · Intel Quartus · MATLAB")
+
+    with c2:
+        st.markdown("**Focus Areas**")
         st.markdown(
-            f"""
-            <div class="hero">
-                <img class="profile-pic" src="https://ui-avatars.com/api/?name=William+Anthony&background=1f77b4&color=ffffff&size=256" alt="William Anthony" />
-                <div class="bio">
-                    <h2>William Anthony</h2>
-                    <p><strong>Creator of SEMIINTEL</strong> — Digital Systems & FPGA · Research & Teaching Assistant</p>
-                    <p>Lifetime Learner · Ganesha Awardee 2024 &amp; 2025</p>
-                    <p><a href="https://www.linkedin.com/in/wlmoi/">LinkedIn</a> • <a href="https://github.com/wlmoi">GitHub</a> • Batam, Indonesia</p>
-                    <div style="margin-top:8px">
-                        <span class="skill-badge">VHDL</span>
-                        <span class="skill-badge">Verilog</span>
-                        <span class="skill-badge">ModelSim</span>
-                        <span class="skill-badge">Intel Quartus</span>
-                        <span class="skill-badge">MATLAB</span>
-                    </div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
+            "- OSINT pipelines for GitHub / StackOverflow\n"
+            "- ML for severity, clustering, anomaly detection\n"
+            "- NLP for specs understanding (NER, sentiment, keywords)\n"
+            "- Deployment, dashboards, and developer enablement"
         )
 
-        st.markdown("<div class='credit-box'>📌 Contributions: Project design, OSINT query engine, ML pipeline, NLP analysis, UI and deployment automation.</div>", unsafe_allow_html=True)
-        st.markdown("### Experience & Projects")
-        st.markdown("""
-        <div class="timeline">
-          <div class="timeline-item"><strong>Research Assistant</strong> — Institut Teknologi Bandung (Feb 2025 – Present). Partial Discharge FPGA research; MATLAB modelling and Verilog implementation.</div>
-          <div class="timeline-item"><strong>Digital Systems Assistant Lecturer</strong> — Institut Teknologi Bandung (Sep 2025 – Present). Lab exercises, VHDL/FPGA instruction.</div>
-          <div class="timeline-item"><strong>Chipathon 2025</strong> — Tapeout Participant (Jul 2025 – Dec 2025). RTL generation and PDK flow (OpenLane).</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("**Recent Highlights**")
+        st.markdown(
+            "- Chipathon 2025 tapeout participant\n"
+            "- Research Assistant, Institut Teknologi Bandung (FPGA PD)\n"
+            "- Assistant Lecturer, Digital Systems (VHDL/FPGA labs)"
+        )
 
-    with right:
-        st.markdown("### Quick Stats")
-        st.markdown("- Projects: 6+")
-        st.markdown("- Certifications: Chipathon 2025")
-        st.markdown("- Open-source: GitHub contributions")
-        st.markdown("\n[View CV / Certificate](./William Anthony Chipathon Certificate.pdf)")
+        with st.expander("Timeline", expanded=False):
+            st.markdown(
+                "- Research Assistant — ITB (Feb 2025 – Present): Partial Discharge FPGA research; MATLAB modelling; Verilog implementation\n"
+                "- Assistant Lecturer — ITB (Sep 2025 – Present): Lab exercises, VHDL/FPGA instruction\n"
+                "- Chipathon 2025 — Tapeout (Jul 2025 – Dec 2025): RTL and PDK flow (OpenLane)"
+            )
+
+        st.markdown("[View CV / Certificate](./William Anthony Chipathon Certificate.pdf)")
 
 # ============================================================================
 # CHATBOT PAGE
