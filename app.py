@@ -381,7 +381,7 @@ if page == "🏠 Home":
                 "- Chipathon 2025 — Tapeout (Jul 2025 – Dec 2025): RTL and PDK flow (OpenLane)"
             )
 
-        st.markdown("[View CV / Certificate](./William Anthony Chipathon Certificate.pdf)")
+        st.markdown(" ")
 
 # ============================================================================
 # CHATBOT PAGE
