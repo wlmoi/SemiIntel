@@ -99,6 +99,11 @@ except ImportError as e:
     IMPORT_ERRORS.append(f"Dataset Loader: {e}")
 
 try:
+    from modules.chatbot import ConversationalRetrievalBot, build_default_knowledge
+except ImportError as e:
+    IMPORT_ERRORS.append(f"Chatbot: {e}")
+
+try:
     from modules.dorking_engine import DorkingEngine
 except ImportError as e:
     IMPORT_ERRORS.append(f"Dorking Engine: {e}")
@@ -118,6 +123,19 @@ if IMPORT_ERRORS and not ML_AVAILABLE:
 # Detect if running on Streamlit Cloud
 IS_STREAMLIT_CLOUD = os.getenv("STREAMLIT_SHARING_MODE") is not None or os.getenv("STREAMLIT_SERVER_PORT") == "8501"
 
+# Dataset summary (for metrics and chatbot)
+DATASET_COUNT = 0
+DATASET_STORAGE_GB = 0.0
+DATASET_RECORDS = 0
+
+if "KaggleDatasetRegistry" in globals():
+    try:
+        DATASET_COUNT = KaggleDatasetRegistry.dataset_count()
+        DATASET_STORAGE_GB = KaggleDatasetRegistry.total_storage_required()
+        DATASET_RECORDS = KaggleDatasetRegistry.total_records()
+    except Exception as e:
+        IMPORT_ERRORS.append(f"Dataset Stats: {e}")
+
 # Sidebar Navigation
 st.sidebar.markdown("## 🔬 SEMIINTEL")
 st.sidebar.markdown("**Semiconductor Intelligence Platform**")
@@ -129,7 +147,16 @@ st.sidebar.markdown("---")
 
 page = st.sidebar.radio(
     "Navigate",
-    ["🏠 Home", "🤖 ML Pipeline", "🧠 NLP Analysis", "📊 Datasets", "🔍 OSINT Tools", "📈 Analytics Dashboard", "🚀 Deployment"]
+    [
+        "🏠 Home",
+        "💬 Chatbot",
+        "🤖 ML Pipeline",
+        "🧠 NLP Analysis",
+        "📊 Datasets",
+        "🔍 OSINT Tools",
+        "📈 Analytics Dashboard",
+        "🚀 Deployment",
+    ],
 )
 
 st.sidebar.markdown("---")
@@ -191,11 +218,15 @@ if page == "🏠 Home":
     
     col1, col2, col3, col4 = st.columns(4)
     
+    dataset_help = f"{DATASET_COUNT} curated datasets totaling {DATASET_STORAGE_GB/1024:.2f} GB"
+    record_value = f"{DATASET_RECORDS/1_000_000:.1f}M" if DATASET_RECORDS else "—"
+    record_help = "Approximate rows across registered datasets"
+    
     with col1:
-        st.metric("Kaggle Datasets", "10", help="Curated datasets totaling 112 GB")
+        st.metric("Datasets", DATASET_COUNT or "—", help=dataset_help)
     
     with col2:
-        st.metric("Total Records", "22M+", help="Training data across all datasets")
+        st.metric("Total Records", record_value, help=record_help)
     
     with col3:
         st.metric("ML Models", "4", help="Trained and validated models")
@@ -207,38 +238,23 @@ if page == "🏠 Home":
     
     # Dataset Overview
     st.markdown("### 📦 Dataset Registry")
+    registry_rows = []
+    if "KaggleDatasetRegistry" in globals():
+        for ds in KaggleDatasetRegistry.list_datasets():
+            registry_rows.append(
+                {
+                    "Dataset": ds.get("name", "Dataset"),
+                    "Records": f"{int(ds.get('rows', 0)):,}",
+                    "Size (GB)": f"{float(ds.get('size_mb', 0))/1024:.3f}",
+                    "Use Case": ds.get("primary_use", "N/A"),
+                }
+            )
     
-    datasets_data = {
-        "Dataset Name": [
-            "GitHub Issues Archive",
-            "Stack Overflow",
-            "IC Performance Benchmarks",
-            "Semiconductor Manufacturing",
-            "IoT Device Failures",
-            "Hardware Bug Reports",
-            "Technical Documentation",
-            "Electronics Reviews",
-            "MCU Specifications",
-            "Community Bug Tracker"
-        ],
-        "Records": ["2M", "20M", "5K", "50K", "100K", "15K", "100K", "1M", "500", "50K"],
-        "Size (GB)": [12, 85, 0.45, 2.2, 3.5, 0.18, 4.8, 6.2, 0.025, 0.32],
-        "Use Case": [
-            "Issue Classification",
-            "Problem Validation",
-            "Performance Prediction",
-            "Anomaly Detection",
-            "Failure Analysis",
-            "Severity Mapping",
-            "Spec Extraction",
-            "Sentiment Analysis",
-            "Feature Engineering",
-            "Pattern Identification"
-        ]
-    }
-    
-    df_datasets = pd.DataFrame(datasets_data)
-    st.dataframe(df_datasets, use_container_width=True)
+    if registry_rows:
+        df_datasets = pd.DataFrame(registry_rows)
+        st.dataframe(df_datasets, use_container_width=True)
+    else:
+        st.info("Dataset registry is unavailable in this environment.")
     
     st.markdown("---")
     
@@ -314,6 +330,84 @@ if page == "🏠 Home":
         st.markdown("- Certifications: Chipathon 2025")
         st.markdown("- Open-source: GitHub contributions")
         st.markdown("\n[View CV / Certificate](./William Anthony Chipathon Certificate.pdf)")
+
+# ============================================================================
+# CHATBOT PAGE
+# ============================================================================
+elif page == "💬 Chatbot":
+    st.markdown('<div class="main-header">💬 SemiIntel Chatbot</div>', unsafe_allow_html=True)
+    st.markdown(
+        "**Local, retrieval-based assistant** — No API calls, no credits used. "
+        "Ask about datasets, analysis methods, and platform usage."
+    )
+    
+    st.markdown("---")
+    
+    # Initialize chatbot session state
+    if "chatbot" not in st.session_state:
+        datasets_list = []
+        if "KaggleDatasetRegistry" in globals():
+            try:
+                datasets_list = KaggleDatasetRegistry.list_datasets()
+            except Exception:
+                pass
+        
+        knowledge = build_default_knowledge(datasets_list) if "build_default_knowledge" in globals() else []
+        
+        if knowledge:
+            st.session_state.chatbot = ConversationalRetrievalBot(knowledge)
+        else:
+            st.session_state.chatbot = None
+    
+    if st.session_state.chatbot:
+        # Display chat history
+        st.markdown("### Chat History")
+        history_col1, history_col2 = st.columns([4, 1])
+        with history_col1:
+            if st.session_state.chatbot.history:
+                for turn in st.session_state.chatbot.history:
+                    with st.chat_message("user"):
+                        st.write(turn.user)
+                    with st.chat_message("assistant"):
+                        st.write(turn.bot)
+            else:
+                st.info("Start a conversation below...")
+        
+        with history_col2:
+            if st.button("🗑️ Clear History", use_container_width=True):
+                st.session_state.chatbot.clear_history()
+                st.rerun()
+        
+        # Query input
+        st.markdown("---")
+        st.markdown("### Ask a Question")
+        user_query = st.text_input(
+            "Your question:",
+            placeholder="E.g., 'What datasets are available?' or 'How do I use TF-IDF analysis?'",
+            label_visibility="collapsed"
+        )
+        
+        if user_query:
+            response = st.session_state.chatbot.ask(user_query)
+            
+            with st.chat_message("user"):
+                st.write(user_query)
+            
+            with st.chat_message("assistant"):
+                st.write(response["answer"])
+            
+            # Show metadata
+            if response["source"]:
+                st.caption(f"**Source:** {response['source']} (Confidence: {response['score']:.2f})")
+            if response["link"]:
+                st.caption(f"[Learn more]({response['link']})")
+            
+            st.rerun()
+    
+    else:
+        st.error(
+            "⚠️ Chatbot initialization failed. Check that the dataset registry and chatbot module are properly loaded."
+        )
 
 # ============================================================================
 # ML PIPELINE PAGE
@@ -910,157 +1004,87 @@ The latest datasheet was released on 2023-06-15."""
 # DATASETS PAGE
 # ============================================================================
 elif page == "📊 Datasets":
-    st.markdown('<div class="main-header">📊 Kaggle Dataset Registry</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">📊 Dataset Registry</div>', unsafe_allow_html=True)
     
-    st.markdown("### 10 Curated Datasets for Semiconductor Intelligence")
-    st.markdown("Total storage: **112 GB** | Total records: **22+ Million**")
-    
+    datasets = KaggleDatasetRegistry.list_datasets() if "KaggleDatasetRegistry" in globals() else []
+    st.markdown(f"### {len(datasets)} Curated Datasets for Semiconductor Intelligence")
+    st.markdown(
+        f"Total storage: **{DATASET_STORAGE_GB:.2f} GB** | Total records: **{DATASET_RECORDS:,}**"
+    )
     st.markdown("---")
-    
-    # Dataset cards
-    datasets = [
-        {
-            "name": "GitHub Issues Archive Dataset",
-            "icon": "🐙",
-            "records": "2,000,000",
-            "size": "12 GB",
-            "features": 15,
-            "use": "Issue severity classification, pattern analysis",
-            "updated": "2024-12-01",
-            "description": "Comprehensive collection of GitHub issues with labels, timestamps, and full descriptions"
-        },
-        {
-            "name": "Stack Overflow Dataset",
-            "icon": "💬",
-            "records": "20,000,000",
-            "size": "85 GB",
-            "features": 18,
-            "use": "Common problem identification, validation",
-            "updated": "2024-11-15",
-            "description": "Questions, answers, tags, votes from Stack Overflow related to embedded systems"
-        },
-        {
-            "name": "IC Performance Benchmarks",
-            "icon": "⚡",
-            "records": "5,000",
-            "size": "450 MB",
-            "features": 25,
-            "use": "Performance prediction, feature engineering",
-            "updated": "2024-10-20",
-            "description": "Comprehensive microcontroller performance data with specifications"
-        },
-        {
-            "name": "Semiconductor Manufacturing Data",
-            "icon": "🏭",
-            "records": "50,000",
-            "size": "2.2 GB",
-            "features": 32,
-            "use": "Anomaly detection, quality analysis",
-            "updated": "2024-09-10",
-            "description": "Process variations, yield rates, and defect information from manufacturing"
-        },
-        {
-            "name": "IoT Device Failure Logs",
-            "icon": "📱",
-            "records": "100,000",
-            "size": "3.5 GB",
-            "features": 20,
-            "use": "Failure pattern analysis, temporal anomalies",
-            "updated": "2024-11-01",
-            "description": "Real-world device failure logs with error codes and diagnostics"
-        },
-        {
-            "name": "Hardware Bug Reports Dataset",
-            "icon": "🐛",
-            "records": "15,000",
-            "size": "180 MB",
-            "features": 16,
-            "use": "Issue classification, severity mapping",
-            "updated": "2024-10-15",
-            "description": "Curated collection of hardware bugs across multiple platforms"
-        },
-        {
-            "name": "Technical Documentation Corpus",
-            "icon": "📚",
-            "records": "100,000",
-            "size": "4.8 GB",
-            "features": 8,
-            "use": "Document classification, specification extraction",
-            "updated": "2024-11-20",
-            "description": "100K+ technical specification pages in text format"
-        },
-        {
-            "name": "Electronics Product Reviews",
-            "icon": "⭐",
-            "records": "1,000,000",
-            "size": "6.2 GB",
-            "features": 12,
-            "use": "Sentiment analysis, issue discovery",
-            "updated": "2024-12-05",
-            "description": "User reviews with ratings and detailed text feedback"
-        },
-        {
-            "name": "Microcontroller Specifications",
-            "icon": "🔬",
-            "records": "500",
-            "size": "25 MB",
-            "features": 45,
-            "use": "Feature engineering, performance clustering",
-            "updated": "2024-11-10",
-            "description": "Structured data of 500+ microcontrollers with complete specs"
-        },
-        {
-            "name": "Community Bug Tracker Dataset",
-            "icon": "🎯",
-            "records": "50,000",
-            "size": "320 MB",
-            "features": 14,
-            "use": "Issue clustering, pattern identification",
-            "updated": "2024-11-25",
-            "description": "Bug reports from open-source embedded projects"
-        }
-    ]
-    
-    # Display dataset cards in a grid
-    for i in range(0, len(datasets), 2):
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            dataset = datasets[i]
-            with st.container():
-                st.markdown(f"### {dataset['icon']} {dataset['name']}")
-                st.markdown(f"**Description:** {dataset['description']}")
-                
-                col_a, col_b, col_c = st.columns(3)
-                with col_a:
-                    st.metric("Records", dataset['records'])
-                with col_b:
-                    st.metric("Size", dataset['size'])
-                with col_c:
-                    st.metric("Features", dataset['features'])
-                
-                st.markdown(f"**Use Case:** {dataset['use']}")
-                st.markdown(f"**Last Updated:** {dataset['updated']}")
-                st.markdown("---")
-        
-        if i + 1 < len(datasets):
-            with col2:
-                dataset = datasets[i + 1]
+
+    def pick_icon(name: str) -> str:
+        name_lower = name.lower()
+        if "github" in name_lower:
+            return "🐙"
+        if "stack" in name_lower:
+            return "💬"
+        if "wafer" in name_lower:
+            return "🧇"
+        if "manufacturing" in name_lower or "secom" in name_lower:
+            return "🏭"
+        if "bug" in name_lower:
+            return "🐛"
+        if "review" in name_lower:
+            return "⭐"
+        if "spec" in name_lower:
+            return "🔬"
+        return "📦"
+
+    if not datasets:
+        st.info("Dataset registry is unavailable in this environment.")
+    else:
+        for i in range(0, len(datasets), 2):
+            col1, col2 = st.columns(2)
+
+            with col1:
+                ds = datasets[i]
                 with st.container():
-                    st.markdown(f"### {dataset['icon']} {dataset['name']}")
-                    st.markdown(f"**Description:** {dataset['description']}")
-                    
+                    icon = pick_icon(ds.get("name", ""))
+                    st.markdown(f"### {icon} {ds.get('name', 'Dataset')}")
+                    st.markdown(f"**Description:** {ds.get('description', 'N/A')}")
+
                     col_a, col_b, col_c = st.columns(3)
                     with col_a:
-                        st.metric("Records", dataset['records'])
+                        st.metric("Records", f"{int(ds.get('rows', 0)):,}")
                     with col_b:
-                        st.metric("Size", dataset['size'])
+                        st.metric("Size", f"{float(ds.get('size_mb', 0)):.2f} GB")
                     with col_c:
-                        st.metric("Features", dataset['features'])
-                    
-                    st.markdown(f"**Use Case:** {dataset['use']}")
-                    st.markdown(f"**Last Updated:** {dataset['updated']}")
+                        st.metric("Features", ds.get("columns", "—"))
+
+                    st.markdown(f"**Use Case:** {ds.get('primary_use', 'N/A')}")
+                    st.markdown(f"**Last Updated:** {ds.get('last_updated', 'N/A')}")
+                    source = ds.get("source", "Source")
+                    link = ds.get("source_url") or ds.get("kaggle_id")
+                    st.markdown(f"**Source:** {source}")
+                    if link:
+                        st.markdown(f"[Open dataset]({link})")
                     st.markdown("---")
+
+            if i + 1 < len(datasets):
+                with col2:
+                    ds = datasets[i + 1]
+                    with st.container():
+                        icon = pick_icon(ds.get("name", ""))
+                        st.markdown(f"### {icon} {ds.get('name', 'Dataset')}")
+                        st.markdown(f"**Description:** {ds.get('description', 'N/A')}")
+
+                        col_a, col_b, col_c = st.columns(3)
+                        with col_a:
+                            st.metric("Records", f"{int(ds.get('rows', 0)):,}")
+                        with col_b:
+                            st.metric("Size", f"{float(ds.get('size_mb', 0)):.2f} GB")
+                        with col_c:
+                            st.metric("Features", ds.get("columns", "—"))
+
+                        st.markdown(f"**Use Case:** {ds.get('primary_use', 'N/A')}")
+                        st.markdown(f"**Last Updated:** {ds.get('last_updated', 'N/A')}")
+                        source = ds.get("source", "Source")
+                        link = ds.get("source_url") or ds.get("kaggle_id")
+                        st.markdown(f"**Source:** {source}")
+                        if link:
+                            st.markdown(f"[Open dataset]({link})")
+                        st.markdown("---")
     
     # Synthetic Data Generator
     st.markdown("### 🔬 Synthetic Data Generator")
