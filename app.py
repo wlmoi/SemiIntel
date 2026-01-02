@@ -341,7 +341,7 @@ if page == "🏠 Home":
 
     with c1:
         st.image(
-            r"img/profpic.jpg",
+            r"img/profpic.png",
             width=200,
         )
         st.markdown("**William Anthony**")
