@@ -341,7 +341,7 @@ if page == "🏠 Home":
 
     with c1:
         st.image(
-            r"img/TMIND_Toyota Mobility Innovation Development (T-MIND)_53_WILLIAM ANTHONY.jpg",
+            r"img/profpic.jpg",
             width=200,
         )
         st.markdown("**William Anthony**")
