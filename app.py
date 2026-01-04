@@ -425,11 +425,13 @@ elif page == "💬 Chatbot":
                     st.write(msg["content"])
                     if msg["role"] == "assistant" and "metadata" in msg:
                         meta = msg["metadata"]
+                        cols = []
                         if meta.get("source"):
-                            st.caption(
-                                f"**Source:** {meta['source']} | "
-                                f"**Confidence:** {meta['score']:.2f}"
-                            )
+                            cols.append(f"**Source:** {meta['source']}")
+                        if meta.get("score"):
+                            cols.append(f"**Confidence:** {meta['score']:.0%}")
+                        if cols:
+                            st.caption(" | ".join(cols))
                         if meta.get("link"):
                             st.caption(f"[📚 Learn more]({meta['link']})")
         else:
@@ -469,6 +471,28 @@ elif page == "💬 Chatbot":
             })
             
             st.rerun()
+        
+        # Show follow-up suggestions if conversation exists
+        if st.session_state.messages and len(st.session_state.messages) > 2:
+            st.markdown("---")
+            st.markdown("**💡 You might also want to know:**")
+            suggestions = st.session_state.chatbot.get_follow_up_suggestions()
+            cols = st.columns(len(suggestions))
+            for col, suggestion in zip(cols, suggestions):
+                with col:
+                    if st.button(suggestion, use_container_width=True, key=f"suggest_{suggestion}"):
+                        st.session_state.messages.append({"role": "user", "content": suggestion})
+                        response = st.session_state.chatbot.ask(suggestion)
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": response["answer"],
+                            "metadata": {
+                                "source": response.get("source"),
+                                "score": response.get("score", 0.0),
+                                "link": response.get("link"),
+                            }
+                        })
+                        st.rerun()
     
     else:
         st.error(
