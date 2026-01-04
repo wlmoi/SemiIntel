@@ -109,227 +109,121 @@ except ImportError as e:
     IMPORT_ERRORS.append(f"Dorking Engine: {e}")
 
 try:
-    from modules.github_scanner import GitHubScanner, StackOverflowScanner, VerificationAnalyzer
+    from modules.pdf_parser import PDFMetadataExtractor
+except ImportError as e:
+    IMPORT_ERRORS.append(f"PDF Parser: {e}")
+
+try:
+    from modules.github_scanner import GitHubScanner
 except ImportError as e:
     IMPORT_ERRORS.append(f"GitHub Scanner: {e}")
 
-# Show import errors if any (but don't fail completely)
-if IMPORT_ERRORS and not ML_AVAILABLE:
-    with st.expander("⚠️ Module Import Warnings", expanded=False):
-        for error in IMPORT_ERRORS:
-            st.warning(error)
-        st.info("Some features may be limited. The app will still demonstrate core functionality.")
+try:
+    from modules.llm_agent import LLMChatAgent
+except ImportError as e:
+    IMPORT_ERRORS.append(f"LLM Agent: {e}")
 
-# Detect if running on Streamlit Cloud
-IS_STREAMLIT_CLOUD = os.getenv("STREAMLIT_SHARING_MODE") is not None or os.getenv("STREAMLIT_SERVER_PORT") == "8501"
-
-# Dataset summary (for metrics and chatbot)
-DATASET_COUNT = 0
+# Derived metrics for dataset stats (safe defaults)
 DATASET_STORAGE_GB = 0.0
 DATASET_RECORDS = 0
-
 if "KaggleDatasetRegistry" in globals():
     try:
-        DATASET_COUNT = KaggleDatasetRegistry.dataset_count()
-        DATASET_STORAGE_GB = KaggleDatasetRegistry.total_storage_required()
-        DATASET_RECORDS = KaggleDatasetRegistry.total_records()
-    except Exception as e:
-        IMPORT_ERRORS.append(f"Dataset Stats: {e}")
+        datasets = KaggleDatasetRegistry.list_datasets()
+        if datasets:
+            DATASET_STORAGE_GB = sum(float(ds.get("size_mb", 0)) for ds in datasets) / 1024
+            DATASET_RECORDS = sum(int(ds.get("rows", 0)) for ds in datasets)
+    except Exception:
+        pass
 
-# Sidebar Navigation
-st.sidebar.markdown("## 🔬 SEMIINTEL")
-st.sidebar.markdown("**Semiconductor Intelligence Platform**")
+IS_STREAMLIT_CLOUD = os.getenv("STREAMLIT_RUNTIME") == "cloud"
 
-if IS_STREAMLIT_CLOUD:
-    st.sidebar.success("☁️ Running on Streamlit Cloud")
-
-st.sidebar.markdown("---")
-
+# Sidebar navigation
+st.sidebar.title("SEMIINTEL")
 page = st.sidebar.radio(
     "Navigate",
     [
         "🏠 Home",
         "💬 Chatbot",
         "🤖 ML Pipeline",
-        "🧠 NLP Analysis",
         "📊 Datasets",
         "🔍 OSINT Tools",
         "📈 Analytics Dashboard",
         "🚀 Deployment",
     ],
+    index=0,
 )
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("**About**")
-st.sidebar.info(
-    "Intelligent gathering and analysis of semiconductor technical data using OSINT, ML, and NLP"
-)
-
-# ============================================================================
-# HOME PAGE
-# ============================================================================
-if page == "🏠 Home":
-    st.markdown('<div class="main-header">🔬 SEMIINTEL</div>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; font-size: 1.1rem; color: #555;">Advanced intelligence gathering and analysis platform</p>', unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    # Key Features
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown("**🔍 OSINT**")
-        st.markdown("""
-        Automated datasheet discovery
-        
-        PDF metadata extraction
-        
-        Community intelligence
-        
-        Smart query generation
-        """)
-    
-    with col2:
-        st.markdown("**🤖 Machine Learning**")
-        st.markdown("""
-        Severity classification 80.2%
-        
-        Issue clustering 0.68 score
-        
-        Performance prediction 74.8%
-        
-        Anomaly detection 92.1%
-        """)
-    
-    with col3:
-        st.markdown("**🧠 NLP**")
-        st.markdown("""
-        Entity recognition
-        
-        Keyword extraction
-        
-        Sentiment analysis
-        
-        Topic modeling
-        """)
-    
-    st.markdown("---")
-    st.markdown("### 📊 Platform Statistics")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    dataset_help = f"{DATASET_COUNT} curated datasets totaling {DATASET_STORAGE_GB/1024:.2f} GB"
-    record_value = f"{DATASET_RECORDS/1_000_000:.1f}M" if DATASET_RECORDS else "—"
-    record_help = "Approximate rows across registered datasets"
-    
-    with col1:
-        st.metric("Datasets", DATASET_COUNT or "—", help=dataset_help)
-    
-    with col2:
-        st.metric("Total Records", record_value, help=record_help)
-    
-    with col3:
-        st.metric("ML Models", "4", help="Trained and validated models")
-    
-    with col4:
-        st.metric("NLP Techniques", "5", help="Advanced text analysis methods")
-    
-    st.markdown("---")
-
-    # Featured dataset carousel
-    st.markdown("### 🎠 Featured Datasets")
-    datasets_list = []
-    if "KaggleDatasetRegistry" in globals():
-        try:
-            datasets_list = KaggleDatasetRegistry.list_datasets()
-        except Exception:
-            datasets_list = []
-
-    if datasets_list:
-        if "carousel_idx" not in st.session_state:
-            st.session_state.carousel_idx = 0
-
-        total = len(datasets_list)
-        current = st.session_state.carousel_idx % total
-        ds = datasets_list[current]
-
-        left, right = st.columns([2, 1])
-        with left:
-            st.markdown(f"**{ds.get('name', 'Dataset')}**")
-            st.markdown(ds.get("description", ""))
-            st.markdown(f"**Use Case:** {ds.get('primary_use', 'N/A')}")
-            st.caption(
-                f"Updated: {ds.get('last_updated', 'N/A')} • Source: {ds.get('source', 'Dataset provider')}"
-            )
-
-        with right:
-            st.metric("Records", f"{int(ds.get('rows', 0)):,}")
-            st.metric("Size (GB)", f"{float(ds.get('size_mb', 0))/1024:.2f}")
-            st.metric("Features", ds.get("columns", "—"))
-
-        c1, c2, c3 = st.columns([1, 2, 1])
-        with c1:
-            if st.button("◀ Prev", key="carousel_prev"):
-                st.session_state.carousel_idx = (st.session_state.carousel_idx - 1) % total
-                st.rerun()
-        with c2:
-            st.caption(f"Showing {current + 1} of {total}")
-        with c3:
-            if st.button("Next ▶", key="carousel_next"):
-                st.session_state.carousel_idx = (st.session_state.carousel_idx + 1) % total
-                st.rerun()
+with st.sidebar.expander("Diagnostics", expanded=False):
+    if IMPORT_ERRORS:
+        for err in IMPORT_ERRORS:
+            st.write(f"⚠️ {err}")
     else:
-        st.info("Dataset registry is unavailable for carousel preview.")
+        st.success("All modules loaded.")
+    st.caption("Set GEMINI_API_KEY for the Gemini LLM tab.")
 
-    st.markdown("---")
-    
+# =========================================================================
+# HOME PAGE
+# =========================================================================
+if page == "🏠 Home":
+    st.markdown('<div class="main-header">🔬 Semiconductor Intelligence Platform</div>', unsafe_allow_html=True)
+    st.markdown(
+        "SEMIINTEL combines retrieval, ML, and OSINT utilities for semiconductor engineers."
+    )
+
     # Dataset Overview
     st.markdown("### 📦 Dataset Registry")
     registry_rows = []
     if "KaggleDatasetRegistry" in globals():
-        for ds in KaggleDatasetRegistry.list_datasets():
-            registry_rows.append(
-                {
-                    "Dataset": ds.get("name", "Dataset"),
-                    "Records": f"{int(ds.get('rows', 0)):,}",
-                    "Size (GB)": f"{float(ds.get('size_mb', 0))/1024:.3f}",
-                    "Use Case": ds.get("primary_use", "N/A"),
-                }
-            )
-    
+        try:
+            for ds in KaggleDatasetRegistry.list_datasets():
+                registry_rows.append(
+                    {
+                        "Dataset": ds.get("name", "Dataset"),
+                        "Records": f"{int(ds.get('rows', 0)):,}",
+                        "Size (GB)": f"{float(ds.get('size_mb', 0))/1024:.3f}",
+                        "Use Case": ds.get("primary_use", "N/A"),
+                    }
+                )
+        except Exception:
+            pass
+
     if registry_rows:
         df_datasets = pd.DataFrame(registry_rows)
         st.dataframe(df_datasets, use_container_width=True)
     else:
-        st.info("Dataset registry is unavailable in this environment.")
-    
+        st.info("Dataset registry is unavailable for carousel preview.")
+
     st.markdown("---")
-    
+
     # Use Cases
     st.markdown("### 🎯 Use Cases")
-    
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
         st.markdown("#### For IC Design Engineers")
-        st.markdown("""
+        st.markdown(
+            """
         - Quickly find relevant datasheets and specifications
         - Identify common issues with specific microcontrollers
         - Analyze performance characteristics before design decisions
         - Discover verification gaps in community projects
-        """)
-    
+        """
+        )
+
     with col2:
         st.markdown("#### For Verification Engineers")
-        st.markdown("""
+        st.markdown(
+            """
         - Analyze bug patterns across hardware platforms
         - Predict severity of reported issues
         - Extract test coverage information from documentation
         - Monitor community-reported verification gaps
-        """)
-    
+        """
+        )
+
     st.markdown("---")
-    
+
     # Getting Started
     st.markdown("### 🚀 Getting Started")
     st.info("👈 Use the sidebar to navigate through different features of SEMIINTEL")
@@ -388,116 +282,184 @@ if page == "🏠 Home":
 # ============================================================================
 elif page == "💬 Chatbot":
     st.markdown('<div class="main-header">💬 SemiIntel Chatbot</div>', unsafe_allow_html=True)
-    st.markdown(
-        "**Local, retrieval-based assistant** — No API calls, no credits used. "
-        "Ask about datasets, analysis methods, and platform usage."
-    )
-    
+    st.markdown("Choose between **offline retrieval** and a **Gemini-powered LLM** (LangChain + google-genai).")
     st.markdown("---")
-    
-    # Initialize chatbot session state
-    if "chatbot" not in st.session_state:
-        datasets_list = []
-        if "KaggleDatasetRegistry" in globals():
+
+    tab_local, tab_llm = st.tabs(["🔒 Local (offline)", "⚡ Gemini LLM"])
+
+    # -----------------------
+    # Local retrieval chatbot
+    # -----------------------
+    with tab_local:
+        if "local_chatbot" not in st.session_state:
+            datasets_list = []
+            if "KaggleDatasetRegistry" in globals():
+                try:
+                    datasets_list = KaggleDatasetRegistry.list_datasets()
+                except Exception:
+                    pass
+
+            knowledge = build_default_knowledge(datasets_list) if "build_default_knowledge" in globals() else []
+
+            st.session_state.local_chatbot = (
+                ConversationalRetrievalBot(knowledge) if knowledge else None
+            )
+
+        if st.session_state.local_chatbot:
+            if "local_messages" not in st.session_state:
+                st.session_state.local_messages = []
+
+            st.markdown("### 💬 Chat History (Offline)")
+            if st.session_state.local_messages:
+                for msg in st.session_state.local_messages:
+                    with st.chat_message(msg["role"]):
+                        st.write(msg["content"])
+                        if msg["role"] == "assistant" and "metadata" in msg:
+                            meta = msg["metadata"]
+                            cols = []
+                            if meta.get("source"):
+                                cols.append(f"**Source:** {meta['source']}")
+                            if meta.get("score"):
+                                cols.append(f"**Confidence:** {meta['score']:.0%}")
+                            if cols:
+                                st.caption(" | ".join(cols))
+                            if meta.get("link"):
+                                st.caption(f"[📚 Learn more]({meta['link']})")
+            else:
+                st.info("💡 Ask about datasets, analysis methods, or platform features.")
+
+            col1, col2 = st.columns([4, 1])
+            with col2:
+                if st.button("🗑️ Clear (offline)", use_container_width=True, key="clear_local"):
+                    st.session_state.local_messages = []
+                    st.session_state.local_chatbot.clear_history()
+                    st.rerun()
+
+            st.markdown("---")
+            st.markdown("### ❓ Ask a Question")
+            user_query = st.chat_input("What would you like to know?", key="chatbot_input_local")
+
+            if user_query:
+                response = st.session_state.local_chatbot.ask(user_query)
+                st.session_state.local_messages.append({"role": "user", "content": user_query})
+                st.session_state.local_messages.append({
+                    "role": "assistant",
+                    "content": response["answer"],
+                    "metadata": {
+                        "source": response.get("source"),
+                        "score": response.get("score", 0.0),
+                        "link": response.get("link"),
+                    }
+                })
+                st.rerun()
+
+            if st.session_state.local_messages and len(st.session_state.local_messages) > 2:
+                st.markdown("---")
+                st.markdown("**💡 You might also want to know:**")
+                suggestions = st.session_state.local_chatbot.get_follow_up_suggestions()
+                cols = st.columns(len(suggestions))
+                for col, suggestion in zip(cols, suggestions):
+                    with col:
+                        if st.button(suggestion, use_container_width=True, key=f"suggest_local_{suggestion}"):
+                            st.session_state.local_messages.append({"role": "user", "content": suggestion})
+                            response = st.session_state.local_chatbot.ask(suggestion)
+                            st.session_state.local_messages.append({
+                                "role": "assistant",
+                                "content": response["answer"],
+                                "metadata": {
+                                    "source": response.get("source"),
+                                    "score": response.get("score", 0.0),
+                                    "link": response.get("link"),
+                                }
+                            })
+                            st.rerun()
+        else:
+            st.error("⚠️ Offline chatbot initialization failed. Dataset registry might be unavailable.")
+
+    # -----------------------
+    # LLM (Gemini) chatbot
+    # -----------------------
+    with tab_llm:
+        st.markdown("### ⚡ Gemini LLM (LangChain)")
+        st.caption("Gemini-only mode (google-genai). Streaming responses when API key is set.")
+
+        if "LLMChatAgent" not in globals():
+            st.error("LLM features unavailable: missing langchain/google-genai. Run `pip install -r requirements.txt` and restart.")
+            st.stop()
+
+        provider_key = "gemini"
+        default_model = "gen-lang-client-0324099646"
+
+        model_name = st.text_input("Model", value=default_model, key="llm_model_input")
+        temperature = st.slider("Temperature", 0.0, 1.0, 0.2, 0.05, key="llm_temp")
+
+        required_key = "GEMINI_API_KEY"
+        missing_key = os.getenv(required_key) is None
+        if missing_key:
+            st.warning(f"Set {required_key} to enable Gemini.")
+
+        if "llm_messages" not in st.session_state:
+            st.session_state.llm_messages = []
+
+        needs_agent = (
+            st.session_state.get("llm_agent_provider") != provider_key
+            or st.session_state.get("llm_agent_model") != model_name
+            or st.session_state.get("llm_agent_temp") != temperature
+        )
+
+        provider_blocked = missing_key
+
+        if needs_agent and not provider_blocked:
             try:
-                datasets_list = KaggleDatasetRegistry.list_datasets()
-            except Exception:
-                pass
-        
-        knowledge = build_default_knowledge(datasets_list) if "build_default_knowledge" in globals() else []
-        
-        if knowledge:
-            st.session_state.chatbot = ConversationalRetrievalBot(knowledge)
-        else:
-            st.session_state.chatbot = None
-    
-    if st.session_state.chatbot:
-        # Initialize message list if not present
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-        
-        # Display chat history
-        st.markdown("### 💬 Chat History")
-        
-        if st.session_state.messages:
-            for msg in st.session_state.messages:
-                with st.chat_message(msg["role"]):
-                    st.write(msg["content"])
-                    if msg["role"] == "assistant" and "metadata" in msg:
-                        meta = msg["metadata"]
-                        cols = []
-                        if meta.get("source"):
-                            cols.append(f"**Source:** {meta['source']}")
-                        if meta.get("score"):
-                            cols.append(f"**Confidence:** {meta['score']:.0%}")
-                        if cols:
-                            st.caption(" | ".join(cols))
-                        if meta.get("link"):
-                            st.caption(f"[📚 Learn more]({meta['link']})")
-        else:
-            st.info("💡 Start by asking about datasets, analysis methods, or platform features!")
-        
-        # Clear history button
+                st.session_state.llm_agent = LLMChatAgent(
+                    provider=provider_key,
+                    model=model_name,
+                    temperature=temperature,
+                    base_url=None,
+                )
+                st.session_state.llm_agent_provider = provider_key
+                st.session_state.llm_agent_model = model_name
+                st.session_state.llm_agent_temp = temperature
+                st.session_state.llm_agent_base_url = None
+            except Exception as e:
+                st.error(f"LLM agent init failed: {e}")
+                st.session_state.llm_agent = None
+
+        st.markdown("#### Conversation")
+        for msg in st.session_state.llm_messages:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg.get("content", ""))
+
         col1, col2 = st.columns([4, 1])
         with col2:
-            if st.button("🗑️ Clear", use_container_width=True):
-                st.session_state.messages = []
-                st.session_state.chatbot.clear_history()
+            if st.button("🗑️ Clear (LLM)", use_container_width=True, key="clear_llm"):
+                st.session_state.llm_messages = []
                 st.rerun()
-        
-        # Query input
-        st.markdown("---")
-        st.markdown("### ❓ Ask a Question")
-        
-        user_query = st.chat_input(
-            "What would you like to know?",
-            key="chatbot_input"
-        )
-        
-        if user_query:
-            # Get response
-            response = st.session_state.chatbot.ask(user_query)
-            
-            # Add to messages
-            st.session_state.messages.append({"role": "user", "content": user_query})
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": response["answer"],
-                "metadata": {
-                    "source": response.get("source"),
-                    "score": response.get("score", 0.0),
-                    "link": response.get("link"),
-                }
-            })
-            
+
+        if provider_blocked:
+            st.stop()
+
+        prompt_llm = st.chat_input("Ask anything (Gemini)", key="chatbot_input_llm")
+        if prompt_llm and st.session_state.get("llm_agent"):
+            st.session_state.llm_messages.append({"role": "user", "content": prompt_llm})
+
+            with st.chat_message("user"):
+                st.markdown(prompt_llm)
+
+            with st.chat_message("assistant"):
+                placeholder = st.empty()
+                assembled = ""
+                history = st.session_state.llm_messages[:-1]
+                try:
+                    for token in st.session_state.llm_agent.stream_response(prompt_llm, history):
+                        assembled += token
+                        placeholder.markdown(assembled)
+                except Exception as e:
+                    assembled = f"LLM call failed: {e}"
+                    placeholder.markdown(assembled)
+
+            st.session_state.llm_messages.append({"role": "assistant", "content": assembled})
             st.rerun()
-        
-        # Show follow-up suggestions if conversation exists
-        if st.session_state.messages and len(st.session_state.messages) > 2:
-            st.markdown("---")
-            st.markdown("**💡 You might also want to know:**")
-            suggestions = st.session_state.chatbot.get_follow_up_suggestions()
-            cols = st.columns(len(suggestions))
-            for col, suggestion in zip(cols, suggestions):
-                with col:
-                    if st.button(suggestion, use_container_width=True, key=f"suggest_{suggestion}"):
-                        st.session_state.messages.append({"role": "user", "content": suggestion})
-                        response = st.session_state.chatbot.ask(suggestion)
-                        st.session_state.messages.append({
-                            "role": "assistant",
-                            "content": response["answer"],
-                            "metadata": {
-                                "source": response.get("source"),
-                                "score": response.get("score", 0.0),
-                                "link": response.get("link"),
-                            }
-                        })
-                        st.rerun()
-    
-    else:
-        st.error(
-            "⚠️ Chatbot initialization failed. Check that the dataset registry and chatbot module are properly loaded."
-        )
 
 # ============================================================================
 # ML PIPELINE PAGE
@@ -508,48 +470,44 @@ elif page == "🤖 ML Pipeline":
     if not ML_AVAILABLE:
         st.error("ML modules are not available. Please check the installation.")
         st.stop()
-    
+
     tab1, tab2, tab3, tab4 = st.tabs([
         "📊 Severity Classifier",
-        "🔗 Issue Clusterer", 
+        "🔗 Issue Clusterer",
         "⚡ Performance Predictor",
-        "🚨 Anomaly Detector"
+        "🚨 Anomaly Detector",
     ])
-    
+
     # Severity Classifier Tab
     with tab1:
         st.markdown("### 🎯 Issue Severity Classification")
         st.markdown("Predict the severity of hardware issues based on description and context.")
-        
+
         col1, col2 = st.columns([2, 1])
-        
+
         with col1:
             issue_text = st.text_area(
                 "Enter Issue Description:",
                 value="I2C clock stretching causes system deadlock and requires hard reset",
-                height=100
+                height=100,
             )
-            
             classify_btn = st.button("🔍 Classify Severity", type="primary")
-        
+
         with col2:
             st.markdown("#### Model Metrics")
             st.metric("Cross-Validation Score", "80.2%")
             st.metric("Training Samples", "1,000")
             st.metric("Classes", "3")
-            
             st.markdown("**Severity Levels:**")
             st.markdown("- 🔴 Critical")
             st.markdown("- 🟠 High")
             st.markdown("- 🟡 Medium")
-        
+
         if classify_btn:
             with st.spinner("Analyzing issue severity..."):
                 try:
                     classifier = SeverityClassifier()
-                    
-                    # Generate sufficient synthetic training data for 5-fold CV
-                    # Need at least 5 samples per class minimum, but better with 10+
+
                     issues = [
                         # Critical severity (12 samples)
                         "System crashes randomly during operation",
@@ -585,64 +543,56 @@ elif page == "🤖 ML Pipeline":
                         "Comment clarity could be better",
                         "Code comment is outdated",
                     ]
-                    severities = (
-                        ["Critical"] * 12 +  # Critical class
-                        ["Medium"] * 9 +      # Medium class
-                        ["Low"] * 9           # Low class
-                    )
-                    
-                    # Convert string labels to integers for the classifier
+                    severities = ["Critical"] * 12 + ["Medium"] * 9 + ["Low"] * 9
                     severity_to_int = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
                     int_labels = [severity_to_int.get(s, 3) for s in severities]
-                    
+
                     classifier.train(issues, int_labels)
                     prediction = classifier.predict(issue_text)
-                    
-                    # Display result
+
                     st.markdown("---")
                     st.markdown("### 📋 Classification Result")
-                    
+
                     severity_color = {
                         "Critical": "🔴",
                         "High": "🟠",
                         "Medium": "🟡",
-                        "Low": "🟢"
+                        "Low": "🟢",
                     }
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
+
+                    col_a, col_b = st.columns(2)
+                    with col_a:
                         st.markdown(f"### {severity_color.get(prediction.predicted_value, '⚪')} {prediction.predicted_value}")
-                    with col2:
+                    with col_b:
                         st.metric("Confidence", f"{prediction.confidence * 100:.1f}%")
-                    
+
                     st.success("✅ Classification completed successfully!")
-                    
+
                 except Exception as e:
                     st.error(f"Error during classification: {e}")
-    
+
     # Issue Clusterer Tab
     with tab2:
         st.markdown("### 🔗 Issue Clustering & Pattern Detection")
         st.markdown("Automatically group similar issues and identify common patterns.")
-        
+
         col1, col2 = st.columns([2, 1])
-        
+
         with col1:
             n_clusters = st.slider("Number of Clusters", 3, 10, 5)
             cluster_btn = st.button("🔄 Run Clustering", type="primary")
-        
+
         with col2:
             st.markdown("#### Model Metrics")
             st.metric("Silhouette Score", "0.68")
             st.metric("Davies-Bouldin", "1.40")
             st.metric("Default Clusters", "5")
-        
+
         if cluster_btn:
             with st.spinner("Clustering issues..."):
                 try:
                     clusterer = IssueClusterer(n_clusters=n_clusters)
-                    
-                    # Sample issues
+
                     sample_issues = [
                         "STM32F407VG UART transmission drops characters at 115200 baud",
                         "USB enumeration fails intermittently under heavy load",
@@ -658,437 +608,116 @@ elif page == "🤖 ML Pipeline":
                         "GPIO interrupt handling misses events during DMA transfers",
                         "UART overrun errors occur even with hardware flow control enabled",
                         "USB device disconnects randomly when other peripherals active",
-                        "I2C NACK not properly detected causing bus hang"
+                        "I2C NACK not properly detected causing bus hang",
                     ]
-                    
+
                     clusterer.fit(sample_issues)
                     cluster_summary = clusterer.get_cluster_summary(sample_issues)
-                    
+
                     st.markdown("---")
                     st.markdown("### 📊 Clustering Results")
-                    
-                    # Show cluster breakdown
+
                     for cluster_id in range(n_clusters):
                         if cluster_id in cluster_summary:
-                            cluster_info = cluster_summary[cluster_id]
-                            cluster_texts = cluster_info.get('examples', [])
-                            
+                            cluster_texts = cluster_summary[cluster_id].get("sample_issues", [])
                             with st.expander(f"🔹 Cluster {cluster_id} ({len(cluster_texts)} issues)", expanded=True):
                                 st.markdown("**Sample Issues:**")
                                 for issue in cluster_texts[:3]:
                                     st.markdown(f"- {issue}")
-                    
+
                     st.success("✅ Clustering completed successfully!")
-                    
+
                 except Exception as e:
                     st.error(f"Error during clustering: {e}")
-    
+
     # Performance Predictor Tab
     with tab3:
         st.markdown("### ⚡ Microcontroller Performance Prediction")
         st.markdown("Predict performance characteristics based on specifications.")
-        
+
         col1, col2, col3 = st.columns(3)
-        
+
         with col1:
-            freq = st.number_input("Clock Frequency (MHz)", 1, 500, 168)
-            flash = st.number_input("Flash Size (KB)", 16, 2048, 512)
-        
+            cores = st.selectbox("CPU Cores", [1, 2, 4, 6, 8], index=2)
+            cache_kb = st.number_input("Cache Size (KB)", 16, 4096, 512)
+
         with col2:
-            ram = st.number_input("RAM Size (KB)", 4, 512, 128)
-            cores = st.selectbox("CPU Cores", [1, 2, 4], index=0)
-        
+            transistors = st.number_input("Transistors (millions)", 10, 5000, 1000)
+            process_nm = st.number_input("Process Node (nm)", 5, 90, 28)
+
         with col3:
+            power_mw = st.number_input("Power Budget (mW)", 50, 2000, 500)
             st.markdown("#### Model Metrics")
             st.metric("Training Accuracy", "74.8%")
-            st.metric("Features", "4")
-        
+            st.metric("Features", "5")
+
         predict_btn = st.button("🎯 Predict Performance", type="primary")
-        
+
         if predict_btn:
             with st.spinner("Predicting performance..."):
                 try:
                     predictor = PerformancePredictor()
-                    
-                    # Train the predictor
-                    X_train, y_train = predictor.create_synthetic_training_data(100)
+                    X_train, y_train = predictor.create_synthetic_training_data(200)
                     predictor.train(X_train, y_train)
-                    
-                    # Make prediction with the actual input values
-                    # Features: cores, cache (KB), transistors (millions), process (nm), power (mW)
-                    features = np.array([[cores, flash, ram, 28, 500]])
-                    prediction = predictor.predict_performance(cores, flash, ram, 28, 500)
-                    
+
+                    prediction = predictor.predict_performance(
+                        cores,
+                        cache_kb,
+                        transistors,
+                        process_nm,
+                        power_mw,
+                    )
+
                     st.markdown("---")
                     st.markdown("### 📈 Performance Prediction")
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.markdown(f"### {prediction.predicted_value}")
-                    with col2:
+
+                    col_a, col_b = st.columns(2)
+                    with col_a:
+                        st.markdown(f"### 🚀 {prediction.predicted_value}")
+                    with col_b:
                         st.metric("Confidence", f"{prediction.confidence * 100:.1f}%")
-                    
-                    # Performance bar chart
-                    st.markdown("#### Specification Overview")
-                    spec_data = pd.DataFrame({
-                        'Specification': ['Frequency', 'Flash', 'RAM', 'Cores'],
-                        'Value': [freq, flash, ram, cores * 50]  # Scale cores for visualization
-                    })
-                    st.bar_chart(spec_data.set_index('Specification'))
-                    
-                    st.success("✅ Prediction completed successfully!")
-                    
+
+                    st.success("✅ Performance prediction completed!")
+
                 except Exception as e:
-                    st.error(f"Error during prediction: {e}")
-    
+                    st.error(f"Error during performance prediction: {e}")
+
     # Anomaly Detector Tab
     with tab4:
-        st.markdown("### 🚨 Hardware Anomaly Detection")
-        st.markdown("Detect unusual patterns in semiconductor manufacturing and testing data.")
-        
-        col1, col2 = st.columns([2, 1])
-        
+        st.markdown("### 🚨 Anomaly Detection")
+        st.markdown("Detect unusual patterns in synthetic semiconductor metrics.")
+
+        col1, col2 = st.columns(2)
         with col1:
-            contamination = st.slider("Contamination Rate", 0.01, 0.3, 0.1, 0.01)
-            detect_btn = st.button("🔍 Detect Anomalies", type="primary")
-        
+            n_samples = st.slider("Samples", 50, 500, 200, 10)
+            contamination = st.slider("Contamination", 0.01, 0.3, 0.1, 0.01)
         with col2:
-            st.markdown("#### Model Metrics")
-            st.metric("Detection Accuracy", "92.1%")
-            st.metric("Default Contamination", "10%")
-            st.metric("Training Samples", "200")
-        
+            st.markdown("#### Notes")
+            st.caption("Synthetic demo: Gaussian data with adjustable contamination rate.")
+
+        detect_btn = st.button("🚨 Run Anomaly Detection", type="primary")
+
         if detect_btn:
             with st.spinner("Detecting anomalies..."):
                 try:
+                    X = np.random.randn(n_samples, 5) * 100 + 500
                     detector = AnomalyDetector(contamination=contamination)
-                    
-                    # Generate synthetic data
-                    np.random.seed(42)
-                    normal_data = np.random.randn(180, 5)
-                    anomaly_data = np.random.randn(20, 5) * 3 + 5
-                    data = np.vstack([normal_data, anomaly_data])
-                    
-                    detector.train(data)
-                    anomaly_list = detector.detect_anomalies(data)
-                    
+                    stats = detector.train(X)
+                    anomalies = detector.detect_anomalies(X)
+
                     st.markdown("---")
-                    st.markdown("### 📊 Anomaly Detection Results")
-                    
-                    n_anomalies = sum(anomaly_list)
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("Total Samples", len(data))
-                    with col2:
-                        st.metric("Anomalies Detected", n_anomalies)
-                    with col3:
-                        st.metric("Anomaly Rate", f"{(n_anomalies / len(data) * 100):.1f}%")
-                    
-                    # Visualization
-                    result_df = pd.DataFrame({
-                        'Sample Index': range(len(data)),
-                        'Is Anomaly': anomaly_list
-                    })
-                    
-                    st.markdown("#### Detection Pattern")
-                    st.line_chart(result_df.set_index('Sample Index')['Is Anomaly'].astype(int))
-                    
-                    st.success("✅ Anomaly detection completed successfully!")
-                    
+                    st.markdown("### 📊 Detection Summary")
+
+                    col_a, col_b = st.columns(2)
+                    with col_a:
+                        st.metric("Anomalies Detected", int(sum(anomalies)))
+                    with col_b:
+                        st.metric("Contamination Rate", f"{stats['contamination_rate'] * 100:.2f}%")
+
+                    st.success("✅ Anomaly detection completed!")
+
                 except Exception as e:
                     st.error(f"Error during anomaly detection: {e}")
-
-# ============================================================================
-# NLP ANALYSIS PAGE
-# ============================================================================
-elif page == "🧠 NLP Analysis":
-    st.markdown('<div class="main-header">🧠 Natural Language Processing</div>', unsafe_allow_html=True)
-    
-    if not ML_AVAILABLE:
-        st.error("NLP modules are not available. Please check the installation.")
-        st.stop()
-    
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🏷️ Named Entity Recognition",
-        "🔑 Keyword Extraction",
-        "😊 Sentiment Analysis",
-        "📝 Text Similarity"
-    ])
-    
-    # Named Entity Recognition Tab
-    with tab1:
-        st.markdown("### 🏷️ Named Entity Recognition")
-        st.markdown("Extract semiconductor-specific entities from technical text.")
-        
-        sample_text = """The STM32F407VG microcontroller features a 168 MHz ARM Cortex-M4 core 
-with 1024 KB Flash memory in an LQFP144 package. Operating voltage ranges from 2.0V to 3.6V 
-with a temperature range of -40°C to 85°C. For technical support, contact technical-support@st.com. 
-The latest datasheet was released on 2023-06-15."""
-        
-        text_input = st.text_area(
-            "Enter Technical Text:",
-            value=sample_text,
-            height=150
-        )
-        
-        ner_btn = st.button("🔍 Extract Entities", type="primary")
-        
-        if ner_btn:
-            with st.spinner("Analyzing text..."):
-                try:
-                    analyzer = NLPAnalyzer()
-                    # Extract entities using the NER component
-                    entities_list = analyzer.ner.extract_entities(text_input)
-                    # Convert to dictionary format for display
-                    entities = {
-                        'PART_NUMBER': [e.text for e in entities_list if e.entity_type == 'part_number'],
-                        'PACKAGE_TYPE': [e.text for e in entities_list if e.entity_type == 'package_type'],
-                        'FREQUENCY': [e.text for e in entities_list if e.entity_type == 'frequency'],
-                        'VOLTAGE': [e.text for e in entities_list if e.entity_type == 'voltage'],
-                        'TEMPERATURE': [e.text for e in entities_list if e.entity_type == 'temperature'],
-                        'PIN_COUNT': [e.text for e in entities_list if e.entity_type == 'pin_count'],
-                        'EMAIL': [e.text for e in entities_list if e.entity_type == 'email'],
-                        'DATE': [e.text for e in entities_list if e.entity_type == 'date']
-                    }
-                    
-                    st.markdown("---")
-                    st.markdown("### 📋 Extracted Entities")
-                    
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        if entities['PART_NUMBER']:
-                            st.markdown("**🔢 Part Numbers:**")
-                            for pn in entities['PART_NUMBER']:
-                                st.code(pn)
-                        
-                        if entities['FREQUENCY']:
-                            st.markdown("**⚡ Frequencies:**")
-                            for freq in entities['FREQUENCY']:
-                                st.code(freq)
-                        
-                        if entities['VOLTAGE']:
-                            st.markdown("**🔋 Voltages:**")
-                            for volt in entities['VOLTAGE']:
-                                st.code(volt)
-                        
-                        if entities['TEMPERATURE']:
-                            st.markdown("**🌡️ Temperatures:**")
-                            for temp in entities['TEMPERATURE']:
-                                st.code(temp)
-                    
-                    with col2:
-                        if entities['PACKAGE_TYPE']:
-                            st.markdown("**📦 Package Types:**")
-                            for pkg in entities['PACKAGE_TYPE']:
-                                st.code(pkg)
-                        
-                        if entities['PIN_COUNT']:
-                            st.markdown("**📍 Pin Counts:**")
-                            for pins in entities['PIN_COUNT']:
-                                st.code(pins)
-                        
-                        if entities['EMAIL']:
-                            st.markdown("**📧 Email Addresses:**")
-                            for email in entities['EMAIL']:
-                                st.code(email)
-                        
-                        if entities['DATE']:
-                            st.markdown("**📅 Dates:**")
-                            for date in entities['DATE']:
-                                st.code(date)
-                    
-                    st.success("✅ Entity extraction completed!")
-                    
-                except Exception as e:
-                    st.error(f"Error during NER: {e}")
-    
-    # Keyword Extraction Tab
-    with tab2:
-        st.markdown("### 🔑 Keyword Extraction")
-        st.markdown("Identify important technical terms using TF-IDF analysis.")
-        
-        text_input = st.text_area(
-            "Enter Technical Document:",
-            value="The ARM Cortex-M4 processor features DSP instructions and floating-point unit. "
-                  "It supports advanced peripherals including USB, CAN, I2C, SPI, and UART interfaces. "
-                  "The device includes 12-bit ADC, DAC, and multiple timers for precise control.",
-            height=150
-        )
-        
-        top_n = st.slider("Number of Keywords", 5, 20, 10)
-        extract_btn = st.button("🔍 Extract Keywords", type="primary")
-        
-        if extract_btn:
-            with st.spinner("Extracting keywords..."):
-                try:
-                    extractor = KeywordExtractor()
-                    keywords = extractor.extract_keywords(text_input, top_k=top_n)
-                    
-                    st.markdown("---")
-                    st.markdown("### 🔑 Top Keywords (TF-IDF Score)")
-                    
-                    # Create DataFrame
-                    kw_df = pd.DataFrame([
-                        {"Keyword": kw, "Score": f"{score:.4f}"}
-                        for kw, score in keywords
-                    ])
-                    
-                    st.dataframe(kw_df, use_container_width=True)
-                    
-                    # Bar chart
-                    chart_data = pd.DataFrame({
-                        'Keyword': [kw for kw, _ in keywords[:10]],
-                        'TF-IDF Score': [score for _, score in keywords[:10]]
-                    })
-                    st.bar_chart(chart_data.set_index('Keyword'))
-                    
-                    st.success("✅ Keyword extraction completed!")
-                    
-                except Exception as e:
-                    st.error(f"Error during keyword extraction: {e}")
-    
-    # Sentiment Analysis Tab
-    with tab3:
-        st.markdown("### 😊 Sentiment Analysis")
-        st.markdown("Analyze sentiment in technical reviews and community feedback.")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            text_input = st.text_area(
-                "Enter Review or Comment:",
-                value="This microcontroller is fantastic! Great performance and documentation.",
-                height=100
-            )
-            
-            analyze_btn = st.button("🔍 Analyze Sentiment", type="primary")
-        
-        with col2:
-            st.markdown("#### Sentiment Categories")
-            st.markdown("- 😊 **Positive**: Favorable feedback")
-            st.markdown("- 😐 **Neutral**: Objective statements")
-            st.markdown("- 😟 **Negative**: Critical feedback")
-        
-        if analyze_btn:
-            with st.spinner("Analyzing sentiment..."):
-                try:
-                    analyzer = SentimentAnalyzer()
-                    sentiment, confidence = analyzer.analyze_sentiment(text_input)
-                    # Format result dictionary
-                    result = {
-                        'sentiment': sentiment,
-                        'confidence': confidence * 100,
-                        'scores': {
-                            'positive': 75.0 if sentiment == 'positive' else 25.0,
-                            'neutral': 50.0 if sentiment == 'neutral' else 25.0,
-                            'negative': 75.0 if sentiment == 'negative' else 25.0
-                        }
-                    }
-                    
-                    st.markdown("---")
-                    st.markdown("### 📊 Sentiment Analysis Result")
-                    
-                    sentiment_emoji = {
-                        'positive': '😊',
-                        'neutral': '😐',
-                        'negative': '😟'
-                    }
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.markdown(f"### {sentiment_emoji[result['sentiment']]} {result['sentiment'].title()}")
-                    with col2:
-                        st.metric("Confidence", f"{result['confidence']:.1f}%")
-                    
-                    # Progress bars for each sentiment
-                    st.markdown("#### Sentiment Scores")
-                    st.progress(result['scores']['positive'] / 100, text=f"Positive: {result['scores']['positive']:.1f}%")
-                    st.progress(result['scores']['neutral'] / 100, text=f"Neutral: {result['scores']['neutral']:.1f}%")
-                    st.progress(result['scores']['negative'] / 100, text=f"Negative: {result['scores']['negative']:.1f}%")
-                    
-                    st.success("✅ Sentiment analysis completed!")
-                    
-                except Exception as e:
-                    st.error(f"Error during sentiment analysis: {e}")
-    
-    # Text Similarity Tab
-    with tab4:
-        st.markdown("### 📝 Text Similarity Analysis")
-        st.markdown("Compare technical documents and find similar issues.")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            text1 = st.text_area(
-                "Text 1:",
-                value="UART transmission fails at high baud rates with DMA enabled",
-                height=100
-            )
-        
-        with col2:
-            text2 = st.text_area(
-                "Text 2:",
-                value="Serial communication drops characters when using DMA transfers",
-                height=100
-            )
-        
-        compare_btn = st.button("🔍 Compare Similarity", type="primary")
-        
-        if compare_btn:
-            with st.spinner("Computing similarity..."):
-                try:
-                    # Initialize NLP analyzer and use the enhanced similarity matcher
-                    nlp = NLPAnalyzer()
-                    matcher = nlp.similarity_matcher
-                    similarities = matcher.compute_combined_similarity(text1, text2)
-                    
-                    combined_score = similarities['combined']
-                    
-                    st.markdown("---")
-                    st.markdown("### 📊 Similarity Analysis")
-                    
-                    # Show combined similarity score prominently
-                    col1, col2, col3 = st.columns([1, 2, 1])
-                    with col2:
-                        st.metric("Combined Similarity Score", f"{combined_score * 100:.1f}%", 
-                                help="Weighted combination of word overlap, semantic meaning, character patterns, and TF-IDF")
-                        st.progress(combined_score, text=f"{combined_score * 100:.1f}% Similar")
-                    
-                    # Show individual metrics in expandable section
-                    with st.expander("📈 Detailed Metrics"):
-                        metrics_col1, metrics_col2, metrics_col3, metrics_col4 = st.columns(4)
-                        
-                        with metrics_col1:
-                            st.metric("Word Overlap", f"{similarities['word_overlap'] * 100:.1f}%",
-                                    help="Exact matching words between texts")
-                        
-                        with metrics_col2:
-                            st.metric("Semantic", f"{similarities['semantic'] * 100:.1f}%",
-                                    help="TF-IDF meaning similarity")
-                        
-                        with metrics_col3:
-                            st.metric("Character N-gram", f"{similarities['character_ngram'] * 100:.1f}%",
-                                    help="Character pattern similarity (catches variations)")
-                        
-                        with metrics_col4:
-                            st.metric("TF-IDF", f"{similarities['tfidf'] * 100:.1f}%",
-                                    help="Traditional TF-IDF cosine similarity")
-                    
-                    # Interpretation
-                    if combined_score > 0.75:
-                        st.success("✅ Texts are highly similar - describing the same or nearly identical issues")
-                    elif combined_score > 0.5:
-                        st.info("ℹ️ Texts are moderately similar - may be related issues or variants")
-                    elif combined_score > 0.3:
-                        st.warning("⚠️ Texts show some similarity - possible related topics")
-                    else:
-                        st.error("❌ Texts are dissimilar - different topics")
-                    
-                except Exception as e:
-                    st.error(f"Error during similarity computation: {e}")
-                    import traceback
-                    st.write(traceback.format_exc())
 
 # ============================================================================
 # DATASETS PAGE
